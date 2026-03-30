@@ -12,7 +12,7 @@ class HomePage extends StatelessWidget {
         elevation: 0,
         leading: Icon(Icons.menu, color: Colors.black),
         title: Text(
-          "Welcome, Prasanna!",
+          "Safe and Relible Rides",
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
