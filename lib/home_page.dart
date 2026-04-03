@@ -32,7 +32,7 @@ class _HomePageState extends State<HomePage> {
           onPressed: () => showMessage("Menu clicked"),
         ),
         title: Text(
-          "Safe and Reliable Rides",
+          "Safe and Relible Rides",
           style: TextStyle(color: Colors.black),
         ),
         centerTitle: true,
