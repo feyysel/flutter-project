@@ -1,0 +1,120 @@
+QA Test Plan                                                                                                                               
+ ## Test Plan Overview
+
+The Test Plan defines the overall testing strategy, scope, and objectives used to verify the quality of the Intercity Ride Sharing System.
+
+Testing is designed to validate that the system behaves correctly under expected conditions and that it meets both functional and non-functional requirements.
+
+Testing Objectives
+
+-  The objectives of QA testing include:
+
+- Ensuring that all core system features function as intended
+
+- Detecting and reporting system defects
+
+- Validating booking and payment workflows
+
+- Ensuring seat availability and booking logic work correctly
+
+- Verifying secure user authentication
+
+- Confirming the system performs reliably during normal user activity
+
+Test Scope
+
+The following system modules are included within the QA testing scope.
+
+##User Management
+
+Testing verifies that users can successfully create and manage accounts.
+
+This includes:
+
+User registration
+
+Login and logout functionality
+
+Profile creation and editing
+
+Role selection between Driver and Passenger
+
+Testing also ensures that invalid input is handled correctly and that authentication mechanisms operate securely.
+
+## Driver Features
+
+Driver functionality is tested to ensure drivers can manage trips effectively.
+
+This includes:
+
+Posting new trips
+
+Editing existing trips
+
+Deleting trips
+
+Viewing passenger booking requests
+
+Accepting or rejecting passengers
+
+Viewing trip history
+
+These features are validated to ensure trip information is stored and updated correctly in the system.
+
+## Passenger Features
+
+Passenger features are tested to verify that passengers can easily find and book trips.
+
+Testing includes:
+
+Searching for available trips
+
+Filtering trips by price, location, or time
+
+Viewing trip details
+
+##Booking seats
+
+Viewing booking history
+
+The goal is to ensure that passengers can locate and book rides without errors.
+
+## Booking System
+
+The booking system is tested to ensure seat management and booking logic work correctly.
+
+Testing verifies that:
+
+Seat availability is accurately tracked
+
+Seat counts decrease after successful bookings
+
+Users cannot book seats when none are available
+
+Booking confirmations are generated correctly
+
+These tests ensure the booking process remains consistent and prevents seat conflicts.
+
+## Payment System
+
+Payment functionality is tested to confirm that transactions are processed securely and correctly.
+
+Testing verifies:
+
+Successful payment processing
+
+Recording of transaction details
+
+Confirmation of successful payments
+
+Handling of failed or incomplete transactions
+
+These checks ensure financial transactions within the system remain accurate and secure.
+
+ ## Rating and Review System
+
+- The rating system allows users to provide feedback after completing trips.
+
+Testing verifies that:
+
+Passengers can rate drivers
