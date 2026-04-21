@@ -17,7 +17,7 @@ class RoleSelectionScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
 
-              // 🔷 App Name
+              // App Name
               Text(
                 "Intercity Ride Sharing",
                 textAlign: TextAlign.center,
@@ -29,7 +29,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
               SizedBox(height: 10),
 
-              // 🔹 Description
+              // Description
               Text(
                 "Select your role to continue",
                 style: TextStyle(
@@ -100,7 +100,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
               SizedBox(height: 25),
 
-              // 🚗 Driver Card
+              // Driver Card
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
