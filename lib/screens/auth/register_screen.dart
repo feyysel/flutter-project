@@ -17,7 +17,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>(); // added
+  final _formKey = GlobalKey<FormState>(); // ✅ added
 
   bool isPasswordHidden = true;
 

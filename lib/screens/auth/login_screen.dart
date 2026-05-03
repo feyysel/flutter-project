@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>(); // added
+  final _formKey = GlobalKey<FormState>(); // ✅ added
 
   bool isPasswordHidden = true;
 
@@ -62,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               SizedBox(height: 30),
 
-              // FORM ADDED
+              // ✅ FORM ADDED
               Form(
                 key: _formKey,
                 child: Container(
@@ -148,7 +148,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           onPressed: () async {
-                            // VALIDATION FIRST
+                            // ✅ VALIDATION FIRST
                             if (_formKey.currentState!.validate()) {
                               final result = await AuthService.login(
                                 email: emailController.text,
@@ -156,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 role: widget.role,
                               );
 
-                              // SUCCESS
+                              // ✅ SUCCESS
                               if (result is UserModel) {
                                 if (result.role == "passenger") {
                                   Navigator.pushReplacement(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'ride_list_screen.dart';
+import 'passenger_profile_screen.dart';
 
 class PassengerHomeScreen extends StatefulWidget {
   @override
@@ -133,7 +135,12 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
 
                   // SEARCH BAR (CLICKABLE)
                   GestureDetector(
-                    onTap: openSearch,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => RideListScreen()),
+                      );
+                    },
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 15),
                       height: 55,
@@ -283,6 +290,15 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         setState(() {
           selectedIndex = index;
         });
+
+        if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PassengerProfileScreen(),
+            ),
+          );
+        }
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
