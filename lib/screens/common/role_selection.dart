@@ -8,16 +8,13 @@ class RoleSelectionScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-
-              // App Name
+              // 🔷 App Name
               Text(
                 "Intercity Ride Sharing",
                 textAlign: TextAlign.center,
@@ -29,7 +26,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
               SizedBox(height: 10),
 
-              // Description
+              // 🔹 Description
               Text(
                 "Select your role to continue",
                 style: TextStyle(
@@ -49,11 +46,8 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-
                     Icon(Icons.person, size: 50, color: Colors.blue),
-
                     SizedBox(height: 15),
-
                     Text(
                       "Passenger",
                       style: TextStyle(
@@ -61,17 +55,13 @@ class RoleSelectionScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     SizedBox(height: 8),
-
                     Text(
                       "Find and book rides between cities",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey[600]),
                     ),
-
                     SizedBox(height: 20),
-
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -86,8 +76,7 @@ class RoleSelectionScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  LoginScreen(role: "passenger"),
+                              builder: (_) => LoginScreen(role: "passenger"),
                             ),
                           );
                         },
@@ -100,7 +89,7 @@ class RoleSelectionScreen extends StatelessWidget {
 
               SizedBox(height: 25),
 
-              // Driver Card
+              //  Driver Card
               Container(
                 padding: EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -109,12 +98,8 @@ class RoleSelectionScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-
-                    Icon(Icons.directions_car,
-                        size: 50, color: Colors.black),
-
+                    Icon(Icons.directions_car, size: 50, color: Colors.black),
                     SizedBox(height: 15),
-
                     Text(
                       "Driver",
                       style: TextStyle(
@@ -122,17 +107,13 @@ class RoleSelectionScreen extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     SizedBox(height: 8),
-
                     Text(
                       "Offer rides and earn money from passengers",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: Colors.grey[600]),
                     ),
-
                     SizedBox(height: 20),
-
                     SizedBox(
                       width: double.infinity,
                       height: 50,
@@ -147,8 +128,7 @@ class RoleSelectionScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) =>
-                                  LoginScreen(role: "driver"),
+                              builder: (_) => LoginScreen(role: "driver"),
                             ),
                           );
                         },
