@@ -5,7 +5,7 @@ import '../../services/auth_service.dart';
 class RegisterScreen extends StatefulWidget {
   final String role;
 
-  const RegisterScreen({Key? key, required this.role}) : super(key: key);
+  const RegisterScreen({super.key, required this.role});
 
   @override
   _RegisterScreenState createState() => _RegisterScreenState();

@@ -9,7 +9,7 @@ import '../../models/user_model.dart';
 class LoginScreen extends StatefulWidget {
   final String role;
 
-  const LoginScreen({Key? key, required this.role}) : super(key: key);
+  const LoginScreen({super.key, required this.role});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();

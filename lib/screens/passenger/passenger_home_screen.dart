@@ -5,6 +5,8 @@ import 'ride_list_screen.dart';
 import 'passenger_profile_screen.dart';
 
 class PassengerHomeScreen extends StatefulWidget {
+  const PassengerHomeScreen({super.key});
+
   @override
   _PassengerHomeScreenState createState() => _PassengerHomeScreenState();
 }
