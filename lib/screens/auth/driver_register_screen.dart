@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class DriverRegisterScreen extends StatefulWidget {
-  const DriverRegisterScreen({Key? key}) : super(key: key);
+  const DriverRegisterScreen({super.key});
 
   @override
   State<DriverRegisterScreen> createState() => _DriverRegisterScreenState();

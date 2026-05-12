@@ -11,50 +11,49 @@ class AuthService {
 
   // ================= REGISTER =================
   static Future<String> register({
-    required String name,
-    required String email,
-    required String password,
-    required String role,
-  }) async {
-    await Future.delayed(Duration(seconds: 1));
+  required String name,
+  required String email,
+  required String password,
+  required String role,
+}) async {
+  await Future.delayed(Duration(seconds: 1));
 
-    try {
-      // 1. empty validation
-      if (name.trim().isEmpty ||
-          email.trim().isEmpty ||
-          password.trim().isEmpty) {
-        return "All fields are required";
-      }
-
-      // 2. password rule (>= 8)
-      if (password.length < 8) {
-        return "Password must be at least 8 characters";
-      }
-
-      // 3. prevent duplicate (Firebase handles this but we keep logic feel)
-      final existing = await _auth.fetchSignInMethodsForEmail(email);
-      if (existing.isNotEmpty) {
-        return "User already exists";
-      }
-
-      // 4. create user in Firebase Auth
-      final cred = await _auth.createUserWithEmailAndPassword(
-        email: email.trim(),
-        password: password,
-      );
-
-      // 5. save user in Firestore
-      await _db.collection("users").doc(cred.user!.uid).set({
-        "name": name.trim(),
-        "email": email.trim(),
-        "role": role,
-      });
-
-      return "success";
-    } catch (e) {
-      return e.toString();
+  try {
+    // validation
+    if (name.trim().isEmpty ||
+        email.trim().isEmpty ||
+        password.trim().isEmpty) {
+      return "All fields are required";
     }
+
+    if (password.length < 8) {
+      return "Password must be at least 8 characters";
+    }
+
+    // create firebase user
+    final cred = await _auth.createUserWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+
+    // save to firestore
+    await _db.collection("users").doc(cred.user!.uid).set({
+      "name": name.trim(),
+      "email": email.trim(),
+      "role": role,
+    });
+
+    return "success";
+  } on FirebaseAuthException catch (e) {
+    if (e.code == 'email-already-in-use') {
+      return "User already exists";
+    }
+
+    return e.message ?? "Registration failed";
+  } catch (e) {
+    return e.toString();
   }
+}
 
   // ================= LOGIN =================
   static Future<dynamic> login({

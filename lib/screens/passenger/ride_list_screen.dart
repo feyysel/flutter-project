@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/ride_service.dart';
 
 class RideListScreen extends StatefulWidget {
+  const RideListScreen({super.key});
+
   @override
   _RideListScreenState createState() => _RideListScreenState();
 }
