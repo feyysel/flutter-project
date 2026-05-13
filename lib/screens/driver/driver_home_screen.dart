@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'driver_profile_screen.dart';
+import 'driver_ride_post_screen.dart';
+import 'driver_earnings_screen.dart';
 
 class DriverHomeScreen extends StatefulWidget {
   @override
@@ -9,6 +12,7 @@ class DriverHomeScreen extends StatefulWidget {
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool isOnline = true;
+  int currentIndex=0;
 
   @override
   Widget build(BuildContext context) {
@@ -86,7 +90,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           vertical: 10,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Color(0xFF050816),
                           borderRadius: BorderRadius.circular(18),
                         ),
                         child: Row(
@@ -111,6 +115,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                   : "YOU ARE OFFLINE",
                               style: TextStyle(
                                 fontSize: 11,
+                                color: const Color.fromARGB(255, 200, 198, 198),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -157,7 +162,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   child: Container(
                     padding: EdgeInsets.all(20),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Color(0xFF050816),
                       borderRadius: BorderRadius.circular(28),
                     ),
                     child: Row(
@@ -195,7 +200,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         Container(
                           width: 1,
                           height: 70,
-                          color: Colors.grey[300],
+                          color:Color(0xFF050816),
                         ),
 
                         // Trips
@@ -225,6 +230,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                   "0",
                                   style: TextStyle(
                                     fontSize: 38,
+                                      color: Colors.deepPurple,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -245,7 +251,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   margin: EdgeInsets.all(16),
                   padding: EdgeInsets.all(25),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Color(0xFF050816),
                     borderRadius: BorderRadius.circular(35),
                   ),
                   child: Column(
@@ -254,7 +260,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       Icon(
                         Icons.notifications_none,
                         size: 60,
-                        color: Colors.grey,
+                        color: const Color.fromARGB(255, 215, 213, 213),
                       ),
 
                       SizedBox(height: 15),
@@ -263,6 +269,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         "No ride requests available",
                         style: TextStyle(
                           fontSize: 20,
+                          color: const Color.fromARGB(255, 202, 198, 198),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -272,7 +279,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       Text(
                         "Waiting for passenger requests...",
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: const Color.fromARGB(255, 206, 202, 202),
                         ),
                       ),
                     ],
@@ -280,45 +287,89 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                 ),
 
                 // ================= BOTTOM NAV =================
-                Container(
-                  margin: EdgeInsets.only(
-                    left: 16,
-                    right: 16,
-                    bottom: 16,
-                  ),
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(35),
-                  ),
-                  child: Row(
-                    mainAxisAlignment:
-                        MainAxisAlignment.spaceEvenly,
-                    children: [
-
-                      navItem(
-                        icon: Icons.home,
-                        label: "Home",
-                        selected: true,
-                      ),
-
-                      navItem(
-                        icon: Icons.account_balance_wallet,
-                        label: "Earnings",
-                      ),
-
-                      navItem(
-                        icon: Icons.person,
-                        label: "Account",
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           ),
         ],
       ),
+bottomNavigationBar: BottomNavigationBar(
+  currentIndex: currentIndex,
+  backgroundColor:Color(0xFF050816),
+  selectedItemColor: Colors.deepPurple,
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+  elevation: 10,
+
+  onTap: (index) {
+    setState(() {
+      currentIndex = index;
+    });
+
+    // HOME
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DriverHomeScreen(),
+        ),
+      );
+    }
+
+    // RIDE POST
+    else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DriverRidePostScreen(),
+        ),
+      );
+    }
+
+    // EARNINGS
+    else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DriverEarningsScreen(),
+        ),
+      );
+    }
+
+    // PROFILE
+    else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DriverProfileScreen(),
+        ),
+      );
+    }
+  },
+
+  items: const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: "Home",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.add_circle),
+      label: "Ride Post",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.account_balance_wallet),
+      label: "Earnings",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: "Profile",
+    ),
+  ],
+),
+
+
     );
   }
 

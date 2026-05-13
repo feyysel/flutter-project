@@ -10,22 +10,25 @@ class RideService {
     required String time,
     required double price,
     required String driverId,
+    required String driverName,
+    required String vehicleModel,
   }) async {
-    await _db.collection("rides").add({
+    await _db.collection("posts").add({
       "from": from,
       "to": to,
-      "time": time,
+      //"time": time,
       "price": price,
       "driverId": driverId,
+      "driverName": driverName,
+      "vehicleModel": vehicleModel,
       "createdAt": FieldValue.serverTimestamp(),
     });
   }
 
   // GET RIDES (Passenger)
   static Stream<QuerySnapshot> getRides() {
-    return _db
-        .collection("rides")
-        .orderBy("createdAt", descending: true)
-        .snapshots();
-  }
+  return _db
+      .collection("posts")
+      .snapshots();
+}
 }
