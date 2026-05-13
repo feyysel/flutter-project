@@ -15,6 +15,7 @@ class AuthService {
   required String email,
   required String password,
   required String role,
+   bool isverified=false,
 }) async {
   await Future.delayed(Duration(seconds: 1));
 
@@ -41,6 +42,7 @@ class AuthService {
       "name": name.trim(),
       "email": email.trim(),
       "role": role,
+      "isverified":isverified,
     });
 
     return "success";

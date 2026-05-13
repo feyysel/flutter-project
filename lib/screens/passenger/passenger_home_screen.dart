@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'ride_list_screen.dart';
 import 'passenger_profile_screen.dart';
+import 'passenger_activity_screen.dart';
 
 class PassengerHomeScreen extends StatefulWidget {
   const PassengerHomeScreen({super.key});
@@ -12,7 +13,7 @@ class PassengerHomeScreen extends StatefulWidget {
 }
 
 class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
-  int selectedIndex = 0;
+  int currentIndex = 0;
 
   final MapController mapController = MapController();
 
@@ -271,47 +272,73 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _navItem(Icons.home, "HOME", 0),
-                  _navItem(Icons.receipt_long, "ACTIVITY", 1),
-                  _navItem(Icons.person, "PROFILE", 2),
-                ],
               ),
             ),
           ),
         ],
       ),
+
+       bottomNavigationBar: BottomNavigationBar(
+  currentIndex: currentIndex,
+  backgroundColor: Colors.white,
+  selectedItemColor: Colors.deepPurple,
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+
+  onTap: (index) {
+    setState(() {
+      currentIndex = index;
+    });
+
+    // HOME
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerHomeScreen(),
+        ),
+      );
+    }
+
+    // RIDE POST
+    else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerActivityScreen(),
+        ),
+      );
+    }
+
+    // PROFILE
+    else if (index == 2) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerProfileScreen(),
+        ),
+      );
+    }
+  },
+
+  items: const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: "Home",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.receipt_long),
+      label: "Activity",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: "Profile",
+    ),
+  ],
+),
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
-    final isSelected = selectedIndex == index;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedIndex = index;
-        });
-
-        if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PassengerProfileScreen(),
-            ),
-          );
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: isSelected ? Colors.purple : Colors.grey),
-          SizedBox(height: 5),
-          Text(label,
-              style:
-                  TextStyle(color: isSelected ? Colors.purple : Colors.grey)),
-        ],
-      ),
-    );
-  }
 }

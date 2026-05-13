@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import 'passenger_activity_screen.dart';
 
-class PassengerProfileScreen extends StatelessWidget {
+import 'passenger_home_screen.dart';
+
+class PassengerProfileScreen extends StatefulWidget {
   const PassengerProfileScreen({super.key});
 
   @override
+  State<PassengerProfileScreen> createState() => _PassengerProfileScreenState();
+}
+
+class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
+  @override
   Widget build(BuildContext context) {
     final user = AuthService.currentUser;
+    int currentIndex = 2;
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: BackButton(color: Colors.black),
         title: Text("Profile", style: TextStyle(color: Colors.black)),
         actions: [
           Icon(Icons.edit, color: Colors.purple),
@@ -24,7 +32,7 @@ class PassengerProfileScreen extends StatelessWidget {
         padding: EdgeInsets.all(20),
         child: Column(
           children: [
-            // 👤 PROFILE IMAGE
+            // PROFILE IMAGE
             CircleAvatar(
               radius: 50,
               backgroundImage: NetworkImage("https://i.pravatar.cc/150?img=3"),
@@ -95,6 +103,67 @@ class PassengerProfileScreen extends StatelessWidget {
           ],
         ),
       ),
+
+       bottomNavigationBar: BottomNavigationBar(
+  currentIndex: currentIndex,
+  backgroundColor: Colors.white,
+  selectedItemColor: Colors.deepPurple,
+  unselectedItemColor: Colors.grey,
+  type: BottomNavigationBarType.fixed,
+
+  onTap: (index) {
+    setState(() {
+      currentIndex = index;
+    });
+
+    // HOME
+    if (index == 0) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerHomeScreen(),
+        ),
+      );
+    }
+
+    // RIDE POST
+    else if (index == 1) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerActivityScreen(),
+        ),
+      );
+    }
+
+    // PROFILE
+    else if (index == 3) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => PassengerProfileScreen(),
+        ),
+      );
+    }
+  },
+
+  items: const [
+    BottomNavigationBarItem(
+      icon: Icon(Icons.home),
+      label: "Home",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.receipt_long),
+      label: "Activity",
+    ),
+
+    BottomNavigationBarItem(
+      icon: Icon(Icons.person),
+      label: "Profile",
+    ),
+  ],
+),
     );
   }
 
