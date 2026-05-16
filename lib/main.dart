@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'screens/common/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'screens/common/role_selection.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +22,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: SplashScreen(),
+      home: FirebaseAuth.instance.currentUser == null
+    ? SplashScreen()
+    : RoleSelectionScreen(),
     );
   }
 }

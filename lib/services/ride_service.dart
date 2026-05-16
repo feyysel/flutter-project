@@ -16,7 +16,7 @@ class RideService {
     await _db.collection("posts").add({
       "from": from,
       "to": to,
-      //"time": time,
+      "time": time,
       "price": price,
       "driverId": driverId,
       "driverName": driverName,

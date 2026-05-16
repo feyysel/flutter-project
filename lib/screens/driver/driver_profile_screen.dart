@@ -4,6 +4,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'driver_ride_post_screen.dart';
 import 'driver_earnings_screen.dart';
 import 'driver_home_screen.dart';
+import 'driver_history_screen.dart';
+
 class DriverProfileScreen extends StatefulWidget {
   @override
   State<DriverProfileScreen> createState() =>
@@ -449,6 +451,19 @@ SizedBox(height: 28),
                     ),
 
                     settingsTile(
+                        icon: Icons.history,
+                        title: "Trip History",
+                        onTap: () {
+                          Navigator.push(
+                           context,
+                          MaterialPageRoute(
+                      builder: (_) => DriverHistoryScreen(),
+                ),
+              );
+            },
+           ),
+
+                    settingsTile(
                       icon: Icons.settings,
                       title: "App Settings",
                     ),
@@ -620,51 +635,63 @@ SizedBox(height: 28),
   Widget settingsTile({
     required IconData icon,
     required String title,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      margin: EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 8,
-      ),
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Color(0xFF11151F),
-        borderRadius: BorderRadius.circular(22),
-      ),
-      child: Row(
-        children: [
+   return GestureDetector(
 
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.deepPurple.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: Colors.deepPurple,
-            ),
+  onTap: onTap,
+
+  child: Container(
+    margin: EdgeInsets.symmetric(
+      horizontal: 16,
+      vertical: 8,
+    ),
+
+    padding: EdgeInsets.all(20),
+
+    decoration: BoxDecoration(
+      color: Color(0xFF11151F),
+      borderRadius: BorderRadius.circular(22),
+    ),
+
+    child: Row(
+      children: [
+
+        Container(
+          padding: EdgeInsets.all(10),
+
+          decoration: BoxDecoration(
+            color: Colors.deepPurple.withOpacity(0.2),
+            shape: BoxShape.circle,
           ),
 
-          SizedBox(width: 18),
+          child: Icon(
+            icon,
+            color: Colors.deepPurple,
+          ),
+        ),
 
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 17,
-              ),
+        SizedBox(width: 18),
+
+        Expanded(
+          child: Text(
+            title,
+
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 17,
             ),
           ),
+        ),
 
-          Icon(
-            Icons.chevron_right,
-            color: Colors.grey,
-          ),
-        ],
-      ),
-    );
+        Icon(
+          Icons.chevron_right,
+          color: Colors.grey,
+        ),
+      ],
+    ),
+  ),
+);
   }
 
   // ================= NAV ITEM =================

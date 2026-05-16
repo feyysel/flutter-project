@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'driver_profile_screen.dart';
 import 'driver_ride_post_screen.dart';
 import 'driver_earnings_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DriverHomeScreen extends StatefulWidget {
   @override
@@ -14,8 +16,79 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool isOnline = true;
   int currentIndex=0;
 
+  Stream<Map<String, dynamic>> getDriverStats() async* {
+
+  final user =
+      FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  await for (final snapshot
+      in FirebaseFirestore.instance
+          .collection("ride_history")
+          .where(
+            "driverId",
+            isEqualTo: user.uid,
+          )
+          .snapshots()) {
+
+    double totalEarnings = 0;
+    int totalTrips = snapshot.docs.length;
+
+    for (var doc in snapshot.docs) {
+
+      final data = doc.data();
+
+      totalEarnings += double.tryParse(
+            data["price"].toString(),
+          ) ??
+          0;
+    }
+
+    yield {
+      "earnings": totalEarnings,
+      "trips": totalTrips,
+    };
+  }
+}
+
+Future<void> resetDriverEarnings() async {
+
+  final user =
+      FirebaseAuth.instance.currentUser;
+
+  if (user == null) return;
+
+  final history = await FirebaseFirestore
+      .instance
+      .collection("ride_history")
+      .where(
+        "driverId",
+        isEqualTo: user.uid,
+      )
+      .get();
+
+  for (var doc in history.docs) {
+
+    await doc.reference.update({
+      "price": "0",
+    });
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+
+    SnackBar(
+      backgroundColor: Colors.red,
+      content: Text(
+        "Earnings reset successfully",
+      ),
+    ),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
+    final currentDriver=FirebaseAuth.instance.currentUser;
     return Scaffold(
       body: Stack(
         children: [
@@ -31,7 +104,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
               TileLayer(
                 urlTemplate:
-                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                   "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
                 userAgentPackageName: "com.example.app",
               ),
 
@@ -158,134 +231,529 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
                 // ================= EARNING CARD =================
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Container(
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Color(0xFF050816),
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    child: Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
-                      children: [
+  padding:
+      const EdgeInsets.symmetric(
+    horizontal: 16,
+  ),
 
-                        // Earnings
-                        Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "TODAY'S EARNINGS",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+  child: StreamBuilder<Map<String, dynamic>>(
 
-                            SizedBox(height: 8),
+    stream: getDriverStats(),
 
-                            Text(
-                              "\$0.00",
-                              style: TextStyle(
-                                fontSize: 38,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.deepPurple,
-                              ),
-                            ),
-                          ],
-                        ),
+    builder: (context, snapshot) {
 
-                        Container(
-                          width: 1,
-                          height: 70,
-                          color:Color(0xFF050816),
-                        ),
+      double earnings = 0;
+      int trips = 0;
 
-                        // Trips
-                        Column(
-                          children: [
-                            Text(
-                              "TRIPS",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+      if (snapshot.hasData) {
 
-                            SizedBox(height: 8),
+        earnings =
+            snapshot.data!["earnings"];
 
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.directions_car,
-                                  color: Colors.deepPurple,
-                                ),
+        trips =
+            snapshot.data!["trips"];
+      }
 
-                                SizedBox(width: 6),
+      return Container(
+        padding: EdgeInsets.all(20),
 
-                                Text(
-                                  "0",
-                                  style: TextStyle(
-                                    fontSize: 38,
-                                      color: Colors.deepPurple,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
+        decoration: BoxDecoration(
+          color: Color(0xFF050816),
+
+          borderRadius:
+              BorderRadius.circular(28),
+        ),
+
+        child: Row(
+          mainAxisAlignment:
+              MainAxisAlignment
+                  .spaceBetween,
+
+          children: [
+
+            // EARNINGS
+            Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+
+              children: [
+
+                Text(
+                  "TOTAL EARNINGS",
+
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight:
+                        FontWeight.bold,
                   ),
                 ),
+
+                SizedBox(height: 8),
+
+                Text(
+                  "$earnings ETB",
+                  
+
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight:
+                        FontWeight.bold,
+                    color:
+                        Colors.deepPurple,
+                  ),
+                ),
+              ],
+            ),
+
+            // TRIPS
+            Column(
+              children: [
+
+                Text(
+                  "TRIPS",
+
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+
+                SizedBox(height: 8),
+
+                Row(
+                  children: [
+
+                    Icon(
+                      Icons.directions_car,
+                      color:
+                          Colors.deepPurple,
+                    ),
+
+                    SizedBox(width: 6),
+
+                    Text(
+                      "$trips",
+
+                      style: TextStyle(
+                        fontSize: 34,
+                        color:
+                            Colors.deepPurple,
+                        fontWeight:
+                            FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        ),
+      );
+    },
+  ),
+),
 
                 Spacer(),
 
-                // ================= NO REQUEST CARD =================
-                Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.all(16),
-                  padding: EdgeInsets.all(25),
-                  decoration: BoxDecoration(
-                    color: Color(0xFF050816),
-                    borderRadius: BorderRadius.circular(35),
+                // ================= RIDE REQUEST CARD =================
+StreamBuilder<QuerySnapshot>(
+
+  stream: FirebaseFirestore.instance
+    .collection("ride_requests")
+    .where("driverId",
+        isEqualTo: currentDriver?.uid)
+    .where(
+  "status",
+  whereIn: ["pending", "accepted"],
+)
+    .snapshots(),
+
+  builder: (context, snapshot) {
+
+    if (!snapshot.hasData ||
+        snapshot.data!.docs.isEmpty) {
+
+      return Container(
+        width: double.infinity,
+        margin: EdgeInsets.all(16),
+        padding: EdgeInsets.all(25),
+
+        decoration: BoxDecoration(
+          color: Color(0xFF050816),
+          borderRadius: BorderRadius.circular(35),
+        ),
+
+        child: Column(
+          children: [
+
+            Icon(
+              Icons.notifications_none,
+              size: 60,
+              color: Colors.grey,
+            ),
+
+            SizedBox(height: 15),
+
+            Text(
+              "No ride requests available",
+
+              style: TextStyle(
+                fontSize: 20,
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            Text(
+              "Waiting for passenger requests...",
+
+              style: TextStyle(
+                color: Colors.grey,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final request =
+        snapshot.data!.docs.first;
+
+    return Container(
+      width: double.infinity,
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(25),
+
+      decoration: BoxDecoration(
+        color: Color(0xFF050816),
+        borderRadius: BorderRadius.circular(35),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
+        children: [
+
+          Row(
+            mainAxisAlignment:
+                MainAxisAlignment.spaceBetween,
+
+            children: [
+
+              Column(
+                crossAxisAlignment:
+                    CrossAxisAlignment.start,
+
+                children: [
+
+                  Text(
+                    request['status'] == "accepted"
+                   ? "Current Ride"
+                   : "New Ride Request",
+
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight:
+                          FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
-                  child: Column(
-                    children: [
 
-                      Icon(
-                        Icons.notifications_none,
-                        size: 60,
-                        color: const Color.fromARGB(255, 215, 213, 213),
-                      ),
+                  SizedBox(height: 5),
 
-                      SizedBox(height: 15),
-
-                      Text(
-                        "No ride requests available",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: const Color.fromARGB(255, 202, 198, 198),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-
-                      SizedBox(height: 8),
-
-                      Text(
-                        "Waiting for passenger requests...",
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 206, 202, 202),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    request['status'] == "accepted"
+                  ? "Ride in progress"
+                   : "Passenger requesting ride",
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
                   ),
+                ],
+              ),
+
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
                 ),
 
+                decoration: BoxDecoration(
+                  color: Colors.deepPurple,
+                  borderRadius:
+                      BorderRadius.circular(20),
+                ),
+
+                child: Text(
+                  "${request.data().toString().contains('price') ? request['price'] : '0'} ETB",
+
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight:
+                        FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 25),
+
+          // PICKUP
+          Text(
+            "PICKUP",
+
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 11,
+              letterSpacing: 2,
+            ),
+          ),
+
+          SizedBox(height: 5),
+
+          Text(
+            request.data().toString().contains('from')
+    ? request['from']
+    : "Unknown Pickup",
+
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          SizedBox(height: 20),
+
+          // DESTINATION
+          Text(
+            "DESTINATION",
+
+            style: TextStyle(
+              color: Colors.grey,
+              fontSize: 11,
+              letterSpacing: 2,
+            ),
+          ),
+
+          SizedBox(height: 5),
+
+          Text(
+            request.data().toString().contains('to') ? request['to'] : "Unknown Destination",
+
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          SizedBox(height: 25),
+
+          Row(
+            children: [
+
+              if (request['status'] == "pending")
+              Expanded(
+                child: ElevatedButton(
+
+                  style:
+                      ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.grey[300],
+
+                    padding:
+                        EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        20,
+                      ),
+                    ),
+                  ),
+
+                  onPressed: () async {
+
+                    await FirebaseFirestore
+                        .instance
+                        .collection(
+                            "ride_requests")
+                        .doc(request.id)
+                        .update({
+                      "status": "declined",
+                    });
+                  },
+
+                  child: Text(
+                    "Decline",
+
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(width: 15),
+
+             if (request['status'] == "pending")
+              Expanded(
+                child: ElevatedButton(
+
+                  style:
+                      ElevatedButton.styleFrom(
+                    backgroundColor:
+                        Colors.deepPurple,
+
+                    padding:
+                        EdgeInsets.symmetric(
+                      vertical: 18,
+                    ),
+
+                    shape:
+                        RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.circular(
+                        20,
+                      ),
+                    ),
+                  ),
+
+                  onPressed: () async {
+
+                    await FirebaseFirestore
+                        .instance
+                        .collection(
+                            "ride_requests")
+                        .doc(request.id)
+                        .update({
+
+                      "status": "accepted",
+                    });
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+
+                      SnackBar(
+                        backgroundColor:
+                            Colors.green,
+
+                        content: Text(
+                          "Ride accepted",
+                        ),
+                      ),
+                    );
+                  },
+
+                  child: Text(
+                    "Accept Trip",
+
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          SizedBox(height: 15),
+
+          // COMPLETE BUTTON
+          if (request['status'] == "accepted")
+          SizedBox(
+            width: double.infinity,
+
+            child: ElevatedButton(
+
+              style:
+                  ElevatedButton.styleFrom(
+                backgroundColor:
+                    Colors.green,
+
+                padding:
+                    EdgeInsets.symmetric(
+                  vertical: 18,
+                ),
+
+                shape:
+                    RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(
+                    20,
+                  ),
+                ),
+              ),
+
+              onPressed: () async {
+
+  final requestData = request.data()
+      as Map<String, dynamic>;
+
+  // 1. UPDATE STATUS
+  await FirebaseFirestore.instance
+      .collection("ride_requests")
+      .doc(request.id)
+      .update({
+    "status": "completed",
+  });
+
+  // 2. SAVE TO HISTORY
+  await FirebaseFirestore.instance
+      .collection("ride_history")
+      .add({
+
+    ...requestData,
+
+    "status": "completed",
+
+    "completedAt":
+        FieldValue.serverTimestamp(),
+  });
+
+  ScaffoldMessenger.of(context)
+      .showSnackBar(
+
+    SnackBar(
+      backgroundColor: Colors.green,
+      content: Text("Ride completed"),
+    ),
+  );
+},
+
+              child: Text(
+                "Complete Ride",
+
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight:
+                      FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  },
+),
                 // ================= BOTTOM NAV =================
               ],
             ),

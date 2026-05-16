@@ -258,23 +258,6 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
               child: Icon(Icons.my_location, color: Colors.purple),
             ),
           ),
-
-          // BOTTOM NAV
-          Positioned(
-            bottom: 20,
-            left: 20,
-            right: 20,
-            child: Container(
-              height: 70,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.9),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-              ),
-            ),
-          ),
         ],
       ),
 
@@ -300,7 +283,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
       );
     }
 
-    // RIDE POST
+    // Activity
     else if (index == 1) {
       Navigator.pushReplacement(
         context,
