@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
 import 'passenger_activity_screen.dart';
-
+import 'passenger_history_screen.dart';
 import 'passenger_home_screen.dart';
 
 class PassengerProfileScreen extends StatefulWidget {
@@ -77,13 +77,25 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
             SizedBox(height: 25),
 
             // MENU LIST
-            _menuItem(Icons.history, "Trip History"),
+            _menuItem(
+  Icons.history,
+  "Trip History",
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            PassengerHistoryScreen(),
+      ),
+    );
+  },
+),
             _menuItem(Icons.local_offer, "Promotions"),
             _menuItem(Icons.settings, "Settings"),
 
             SizedBox(height: 30),
 
-            // 🚪 LOGOUT
+            // LOGOUT
             SizedBox(
               width: double.infinity,
               height: 50,
@@ -187,19 +199,61 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
     );
   }
 
-  Widget _menuItem(IconData icon, String title) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: ListTile(
-        leading: Icon(icon, color: Colors.purple),
-        title: Text(title),
-        trailing: Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {},
-      ),
-    );
+  Widget _menuItem(IconData icon, String title, {VoidCallback? onTap}) {
+    return GestureDetector(
+
+  onTap: onTap,
+
+  child: Container(
+    margin: EdgeInsets.only(bottom: 15),
+
+    padding: EdgeInsets.symmetric(
+      horizontal: 18,
+      vertical: 18,
+    ),
+
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius:
+          BorderRadius.circular(20),
+
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black12,
+          blurRadius: 8,
+        ),
+      ],
+    ),
+
+    child: Row(
+      children: [
+
+        Icon(
+          icon,
+          color: Colors.deepPurple,
+        ),
+
+        SizedBox(width: 15),
+
+        Expanded(
+          child: Text(
+            title,
+
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+
+        Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey,
+        ),
+      ],
+    ),
+  ),
+);
   }
 }

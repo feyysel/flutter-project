@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'driver_profile_screen.dart';
 import 'driver_ride_post_screen.dart';
 import 'driver_home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class DriverEarningsScreen extends StatefulWidget {
   @override
@@ -25,70 +27,170 @@ class _DriverEarningsScreenState
         title: Text("Earnings"),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
+      body: StreamBuilder<QuerySnapshot>(
 
-            // TOTAL EARNINGS
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: Color(0xFF11151F),
-                borderRadius: BorderRadius.circular(25),
+  stream: FirebaseFirestore.instance
+      .collection("ride_history")
+      .where(
+        "driverId",
+        isEqualTo:
+            FirebaseAuth.instance.currentUser!.uid,
+      )
+      .snapshots(),
+
+  builder: (context, snapshot) {
+
+    if (!snapshot.hasData) {
+      return Center(
+        child:
+            CircularProgressIndicator(),
+      );
+    }
+
+    final rides = snapshot.data!.docs;
+
+    double total = 0;
+
+    for (var ride in rides) {
+
+      total += double.tryParse(
+            ride['price'].toString(),
+          ) ??
+          0;
+    }
+
+    return Padding(
+      padding: EdgeInsets.all(16),
+
+      child: Column(
+        children: [
+
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.all(25),
+
+            decoration: BoxDecoration(
+              color: Colors.deepPurple,
+
+              borderRadius:
+                  BorderRadius.circular(
+                25,
               ),
-              child: Column(
-                children: [
+            ),
 
-                  Text(
-                    "TOTAL EARNINGS",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      letterSpacing: 2,
+            child: Column(
+              children: [
+
+                Text(
+                  "TOTAL EARNINGS",
+
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+
+                SizedBox(height: 12),
+
+                Text(
+                  "$total ETB",
+
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 40,
+                    fontWeight:
+                        FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          SizedBox(height: 25),
+
+          Expanded(
+            child: ListView.builder(
+
+              itemCount: rides.length,
+
+              itemBuilder:
+                  (context, index) {
+
+                final ride =
+                    rides[index];
+
+                return Container(
+                  margin: EdgeInsets.only(
+                    bottom: 15,
+                  ),
+
+                  padding: EdgeInsets.all(
+                    18,
+                  ),
+
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+
+                    borderRadius:
+                        BorderRadius.circular(
+                      20,
                     ),
                   ),
 
-                  SizedBox(height: 15),
+                  child: Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment
+                            .spaceBetween,
 
-                  Text(
-                    "\$0.00",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 42,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    children: [
+
+                      Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment
+                                .start,
+
+                        children: [
+
+                          Text(
+                            "${ride['from']} → ${ride['to']}",
+
+                            style: TextStyle(
+                              fontWeight:
+                                  FontWeight
+                                      .bold,
+                              fontSize: 17,
+                            ),
+                          ),
+
+                          SizedBox(height: 6),
+
+                          Text(
+                            ride['passengerName'],
+                          ),
+                        ],
+                      ),
+
+                      Text(
+                        "+ ${ride['price']} ETB",
+
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight:
+                              FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
-
-            SizedBox(height: 20),
-
-            // TODAY
-            earningsCard(
-              title: "Today's Earnings",
-              amount: "\$0.00",
-            ),
-
-            SizedBox(height: 15),
-
-            // WEEK
-            earningsCard(
-              title: "Weekly Earnings",
-              amount: "\$0.00",
-            ),
-
-            SizedBox(height: 15),
-
-            // MONTH
-            earningsCard(
-              title: "Monthly Earnings",
-              amount: "\$0.00",
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  },
+),
 
       bottomNavigationBar: BottomNavigationBar(
   currentIndex: currentIndex,

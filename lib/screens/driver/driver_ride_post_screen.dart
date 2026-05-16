@@ -20,6 +20,7 @@ class _DriverRidePostScreenState
   final toController = TextEditingController();
   final priceController = TextEditingController();
   final seatsController = TextEditingController();
+  final timeController = TextEditingController();
 
   bool isLoading = false;
 
@@ -27,9 +28,10 @@ class _DriverRidePostScreenState
   Future<void> postRide() async {
 
     if (fromController.text.isEmpty ||
-        toController.text.isEmpty ||
-        priceController.text.isEmpty ||
-        seatsController.text.isEmpty) {
+    toController.text.isEmpty ||
+    priceController.text.isEmpty ||
+    seatsController.text.isEmpty ||
+    timeController.text.isEmpty) {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -60,13 +62,19 @@ class _DriverRidePostScreenState
 
       "driverId": user.uid,
       "driverName": driverData?["name"],
-      "vehicleModel": driverData?["vehicleModel"],
+      //"vehicleModel": driverData?["vehicleModel"],
 
       "from": fromController.text,
       "to": toController.text,
 
-      "price": priceController.text,
-      "seats": seatsController.text,
+     "price": priceController.text,
+
+"seats": seatsController.text,
+
+"time": timeController.text,
+
+"vehicleModel":
+    driverData?["vehicleModel"] ?? "Economy",
 
       "createdAt": FieldValue.serverTimestamp(),
     });
@@ -79,7 +87,7 @@ class _DriverRidePostScreenState
     toController.clear();
     priceController.clear();
     seatsController.clear();
-
+    timeController.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: Colors.green,
@@ -134,6 +142,14 @@ class _DriverRidePostScreenState
               hint: "Available Seats",
               icon: Icons.event_seat,
             ),
+
+            SizedBox(height: 18),
+
+textField(
+  controller: timeController,
+  hint: "Ride Time (e.g 4:30 PM)",
+  icon: Icons.access_time,
+),
 
             SizedBox(height: 30),
 
