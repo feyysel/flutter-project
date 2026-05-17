@@ -164,14 +164,74 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
               SizedBox(height: 6),
 
               if (ride['status'] == "pending")
-                Text(
-                  "Waiting for driver acceptance",
-                  style: TextStyle(
-                    color: Colors.orange,
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
+                if (ride['status'] == "pending")
+
+  Column(
+    crossAxisAlignment:
+        CrossAxisAlignment.start,
+
+    children: [
+
+      Text(
+        "Waiting for driver acceptance",
+
+        style: TextStyle(
+          color: Colors.orange,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      SizedBox(height: 14),
+
+      SizedBox(
+        width: double.infinity,
+
+        child: ElevatedButton(
+
+          style:
+              ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+
+            shape:
+                RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(
+                14,
+              ),
+            ),
+          ),
+
+          onPressed: () async {
+
+            await FirebaseFirestore
+                .instance
+                .collection(
+                    "ride_requests")
+                .doc(ride.id)
+                .delete();
+
+            ScaffoldMessenger.of(
+                    context)
+                .showSnackBar(
+
+              SnackBar(
+                backgroundColor:
+                    Colors.red,
+
+                content: Text(
+                  "Ride request cancelled",
                 ),
+              ),
+            );
+          },
+
+          child: Text(
+            "Cancel Request",
+          ),
+        ),
+      ),
+    ],
+  ), 
 
               if (ride['status'] == "accepted")
                 Text(

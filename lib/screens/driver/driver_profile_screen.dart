@@ -5,6 +5,7 @@ import 'driver_ride_post_screen.dart';
 import 'driver_earnings_screen.dart';
 import 'driver_home_screen.dart';
 import 'driver_history_screen.dart';
+import 'driver_verification_screen.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   @override
@@ -39,6 +40,133 @@ class _DriverProfileScreenState
       driverData = doc.data();
     });
   }
+
+  final nameController =
+    TextEditingController();
+
+final phoneController =
+    TextEditingController();
+
+final imageController =
+    TextEditingController();
+
+void showEditProfileDialog(
+    dynamic userData) {
+
+  nameController.text =
+      userData?["name"] ?? "";
+
+  phoneController.text =
+      userData?["phone"] ?? "";
+
+  imageController.text =
+      userData?["profileImage"] ?? "";
+
+  showDialog(
+
+    context: context,
+
+    builder: (context) {
+
+      return AlertDialog(
+
+        title: Text("Edit Profile"),
+
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+
+            children: [
+
+              TextField(
+                controller: nameController,
+
+                decoration: InputDecoration(
+                  labelText: "Name",
+                ),
+              ),
+
+              SizedBox(height: 15),
+
+              TextField(
+                controller: phoneController,
+
+                decoration: InputDecoration(
+                  labelText: "Phone",
+                ),
+              ),
+
+              SizedBox(height: 15),
+
+              TextField(
+                controller: imageController,
+
+                decoration: InputDecoration(
+                  labelText:
+                      "Profile Image URL",
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        actions: [
+
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+
+            child: Text("Cancel"),
+          ),
+
+          ElevatedButton(
+
+            onPressed: () async {
+
+              final user =
+                  FirebaseAuth
+                      .instance.currentUser;
+
+              await FirebaseFirestore
+                  .instance
+                  .collection("users")
+                  .doc(user!.uid)
+                  .update({
+
+                "name":
+                    nameController.text,
+
+                "phone":
+                    phoneController.text,
+
+                "profileImage":
+                    imageController.text,
+              });
+
+              Navigator.pop(context);
+
+              ScaffoldMessenger.of(context)
+                  .showSnackBar(
+
+                SnackBar(
+                  backgroundColor:
+                      Colors.green,
+
+                  content: Text(
+                    "Profile updated",
+                  ),
+                ),
+              );
+            },
+
+            child: Text("Save"),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   // ================= LOGOUT =================
   Future<void> logout() async {
@@ -92,10 +220,16 @@ class _DriverProfileScreenState
 
                   Spacer(),
 
-                  Icon(
-                    Icons.more_vert,
-                    color: Colors.white,
-                  ),
+IconButton(
+  icon: Icon(
+    Icons.edit,
+    color: Colors.white,
+  ),
+
+  onPressed: () {
+    showEditProfileDialog(driverData);
+  },
+),
                 ],
               ),
             ),
@@ -121,12 +255,28 @@ class _DriverProfileScreenState
                             ),
                           ),
                           child: CircleAvatar(
-                            radius: 55,
-                            backgroundImage: NetworkImage(
-                              driverData!["profileImage"] ??
-                                  "https://i.pravatar.cc/150?img=12",
-                            ),
-                          ),
+  radius: 40,
+
+  backgroundImage:
+      driverData != null &&
+              driverData!["profileImage"] != null &&
+              driverData!["profileImage"] != ""
+
+          ? NetworkImage(
+              driverData!["profileImage"],
+            )
+
+          : null,
+
+  child:
+      driverData == null ||
+              driverData!["profileImage"] == null ||
+              driverData!["profileImage"] == ""
+
+          ? Icon(Icons.person, size: 40)
+
+          : null,
+),
                         ),
 
                         Positioned(
@@ -197,40 +347,95 @@ class _DriverProfileScreenState
                     SizedBox(height: 18),
 
 // ================= VERIFY BUTTON =================
-Container(
-  padding: EdgeInsets.symmetric(
-    horizontal: 18,
-    vertical: 10,
-  ),
-  decoration: BoxDecoration(
-    color: Colors.deepPurple.withOpacity(0.2),
-    borderRadius: BorderRadius.circular(20),
-    border: Border.all(
-      color: Colors.deepPurple,
+GestureDetector(
+
+  onTap: () {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            DriverVerificationScreen(),
+      ),
+    );
+  },
+
+  child: Container(
+    padding: EdgeInsets.symmetric(
+      horizontal: 18,
+      vertical: 10,
     ),
-  ),
-  child: Row(
-    mainAxisSize: MainAxisSize.min,
-    children: [
 
-      Icon(
-        Icons.verified,
+    decoration: BoxDecoration(
+      color:
+    driverData!["verificationStatus"] ==
+            "verified"
+
+        ? Colors.green.withOpacity(0.2)
+
+        : driverData![
+                    "verificationStatus"] ==
+                "under_review"
+
+            ? Colors.orange.withOpacity(0.2)
+
+            : driverData![
+                        "verificationStatus"] ==
+                    "rejected"
+
+                ? Colors.red.withOpacity(0.2)
+
+                : Colors.deepPurple
+                    .withOpacity(0.2),
+
+      borderRadius:
+          BorderRadius.circular(20),
+
+      border: Border.all(
         color: Colors.deepPurple,
-        size: 18,
       ),
+    ),
 
-      SizedBox(width: 8),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
 
-      Text(
-        driverData!["isVerified"] == true
-            ? "Verified Driver"
-            : "Verify Account",
-        style: TextStyle(
+      children: [
+
+        Icon(
+          Icons.verified,
           color: Colors.deepPurple,
-          fontWeight: FontWeight.bold,
+          size: 18,
         ),
-      ),
-    ],
+
+        SizedBox(width: 8),
+
+        Text(
+          driverData!["verificationStatus"] ==
+        "verified"
+
+    ? "Verified Driver"
+
+    : driverData![
+            "verificationStatus"] ==
+        "under_review"
+
+        ? "Under Review"
+
+        : driverData![
+                "verificationStatus"] ==
+            "rejected"
+
+            ? "Document Rejected"
+
+            : "Verify Account",
+
+          style: TextStyle(
+            color: Colors.deepPurple,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    ),
   ),
 ),
 

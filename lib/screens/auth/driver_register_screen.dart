@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-class DriverRegisterScreen extends StatefulWidget {
-  const DriverRegisterScreen({super.key});
+class DriverVerificationScreen extends StatefulWidget {
+  const DriverVerificationScreen({super.key});
 
   @override
-  State<DriverRegisterScreen> createState() => _DriverRegisterScreenState();
+  State<DriverVerificationScreen> createState() => _DriverVerificationScreenState();
 }
 
-class _DriverRegisterScreenState extends State<DriverRegisterScreen> {
+class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
 
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
