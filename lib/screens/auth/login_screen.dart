@@ -4,6 +4,9 @@ import '../../services/auth_service.dart';
 import '../passenger/passenger_home_screen.dart';
 import '../driver/driver_home_screen.dart';
 import '../../models/user_model.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/notification_service.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -155,25 +158,44 @@ class _LoginScreenState extends State<LoginScreen> {
                                 password: passwordController.text,
                                 role: widget.role,
                               );
+      // SUCCESS
+if (result is UserModel) {
 
-                              //  SUCCESS
-                              if (result is UserModel) {
-                                if (result.role == "passenger") {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => PassengerHomeScreen(),
-                                    ),
-                                  );
-                                } else {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => DriverHomeScreen(),
-                                    ),
-                                  );
-                                }
-                              }
+  // ================= SAVE FCM TOKEN =================
+final token =
+    await FirebaseMessaging.instance.getToken();
+
+if (token != null) {
+
+  await FirebaseFirestore.instance
+      .collection("users")
+      .doc(result.uid)
+      .update({
+
+    "notificationToken": token,
+  });
+}
+
+  // ================= NAVIGATION =================
+  if (result.role == "passenger") {
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PassengerHomeScreen(),
+      ),
+    );
+
+  } else {
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DriverHomeScreen(),
+      ),
+    );
+  }
+}
                               //  ERROR MESSAGE
                               else {
                                 ScaffoldMessenger.of(context).showSnackBar(

@@ -70,6 +70,7 @@ class _DriverRidePostScreenState
      "price": priceController.text,
 
 "seats": seatsController.text,
+"isOnline": true,
 
 "time": timeController.text,
 
@@ -515,17 +516,12 @@ SizedBox(height: 20),
 StreamBuilder<QuerySnapshot>(
 
   stream: FirebaseFirestore.instance
-      .collection("posts")
-      .where(
-        "driverId",
-        isEqualTo:
-            FirebaseAuth.instance.currentUser!.uid,
-      )
-      .orderBy(
-        "createdAt",
-        descending: true,
-      )
-      .snapshots(),
+    .collection("posts")
+    .where(
+      "driverId",
+      isEqualTo: FirebaseAuth.instance.currentUser!.uid,
+    )
+    .snapshots(),
 
   builder: (context, snapshot) {
 
@@ -534,6 +530,15 @@ StreamBuilder<QuerySnapshot>(
         child: CircularProgressIndicator(),
       );
     }
+
+    if (snapshot.hasError) {
+  return Center(
+    child: Text(
+      snapshot.error.toString(),
+      style: TextStyle(color: Colors.red),
+    ),
+  );
+}
 
     if (snapshot.data!.docs.isEmpty) {
 

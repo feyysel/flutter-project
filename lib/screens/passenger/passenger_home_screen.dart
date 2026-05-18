@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'ride_list_screen.dart';
 import 'passenger_profile_screen.dart';
 import 'passenger_activity_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PassengerHomeScreen extends StatefulWidget {
   const PassengerHomeScreen({super.key});
@@ -21,6 +23,46 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
 
   String pickup = "";
   String destination = "";
+
+  @override
+void initState() {
+  super.initState();
+
+  listenNotifications();
+}
+
+void listenNotifications() {
+
+  final user =
+      FirebaseAuth.instance.currentUser;
+
+  FirebaseFirestore.instance
+      .collection("notifications")
+      .where(
+        "userId",
+        isEqualTo: user!.uid,
+      )
+      .snapshots()
+      .listen((snapshot) {
+
+    for (var doc in snapshot.docs) {
+
+      final data = doc.data();
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+
+        SnackBar(
+          backgroundColor: Colors.deepPurple,
+
+          content: Text(
+            data["title"],
+          ),
+        ),
+      );
+    }
+  });
+}
 
   void openSearch() async {
     final result = await showModalBottomSheet<Map<String, String>>(

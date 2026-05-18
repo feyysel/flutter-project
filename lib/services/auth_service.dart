@@ -96,6 +96,7 @@ class AuthService {
         name: user["name"],
         email: user["email"],
         role: user["role"],
+        uid: cred.user!.uid,
       );
 
       return currentUser;

@@ -52,6 +52,46 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   }
 }
 
+@override
+void initState() {
+  super.initState();
+
+  listenNotifications();
+}
+
+void listenNotifications() {
+
+  final user =
+      FirebaseAuth.instance.currentUser;
+
+  FirebaseFirestore.instance
+      .collection("notifications")
+      .where(
+        "userId",
+        isEqualTo: user!.uid,
+      )
+      .snapshots()
+      .listen((snapshot) {
+
+    for (var doc in snapshot.docs) {
+
+      final data = doc.data();
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(
+
+        SnackBar(
+          backgroundColor: Colors.deepPurple,
+
+          content: Text(
+            data["title"],
+          ),
+        ),
+      );
+    }
+  });
+}
+
 Future<void> resetDriverEarnings() async {
 
   final user =
@@ -200,11 +240,43 @@ Future<void> resetDriverEarnings() async {
 
                       // Toggle
                       GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            isOnline = !isOnline;
-                          });
-                        },
+                        onTap: () async {
+
+  final newStatus = !isOnline;
+
+  setState(() {
+    isOnline = newStatus;
+  });
+
+  final user =
+      FirebaseAuth.instance.currentUser;
+
+  // UPDATE USER STATUS
+  await FirebaseFirestore.instance
+      .collection("users")
+      .doc(user!.uid)
+      .update({
+    "isOnline": newStatus,
+  });
+
+  // UPDATE ALL DRIVER POSTS
+  final posts = await FirebaseFirestore
+      .instance
+      .collection("posts")
+      .where("driverId",
+          isEqualTo: user.uid)
+      .get();
+
+  for (var doc in posts.docs) {
+
+    await FirebaseFirestore.instance
+        .collection("posts")
+        .doc(doc.id)
+        .update({
+      "isOnline": newStatus,
+    });
+  }
+},
                         child: Container(
                           padding: EdgeInsets.symmetric(
                             horizontal: 18,
@@ -467,14 +539,44 @@ StreamBuilder<QuerySnapshot>(
 
                   SizedBox(height: 5),
 
-                  Text(
-                    request['status'] == "accepted"
-                  ? "Ride in progress"
-                   : "Passenger requesting ride",
-                    style: TextStyle(
-                      color: Colors.grey,
-                    ),
-                  ),
+                 Column(
+  crossAxisAlignment:
+      CrossAxisAlignment.start,
+
+  children: [
+
+    Text(
+      request['status'] == "accepted"
+          ? "Ride in progress"
+          : "Passenger requesting ride",
+
+      style: TextStyle(
+        color: Colors.grey,
+      ),
+    ),
+
+    SizedBox(height: 10),
+
+    Text(
+      "Passenger: ${request['passengerName'] ?? ''}",
+
+      style: TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+
+    SizedBox(height: 5),
+
+    Text(
+      "Phone: ${request['passengerPhone'] ?? ''}",
+
+      style: TextStyle(
+        color: Colors.white70,
+      ),
+    ),
+  ],
+),
                 ],
               ),
 
@@ -645,6 +747,21 @@ StreamBuilder<QuerySnapshot>(
                       "status": "accepted",
                     });
 
+                    await FirebaseFirestore.instance
+    .collection("notifications")
+    .add({
+
+  "userId": request['passengerId'],
+
+  "title": "Ride Accepted",
+
+  "body":
+      "Driver accepted your ride",
+
+  "createdAt":
+      FieldValue.serverTimestamp(),
+});
+
                     ScaffoldMessenger.of(
                             context)
                         .showSnackBar(
@@ -714,6 +831,21 @@ StreamBuilder<QuerySnapshot>(
       .update({
     "status": "completed",
   });
+
+  await FirebaseFirestore.instance
+    .collection("notifications")
+    .add({
+
+  "userId": request['passengerId'],
+
+  "title": "Ride Accepted",
+
+  "body":
+      "Driver accepted your ride",
+
+  "createdAt":
+      FieldValue.serverTimestamp(),
+});
 
   // 2. SAVE TO HISTORY
   await FirebaseFirestore.instance

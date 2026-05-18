@@ -1,8 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -17,48 +13,25 @@ class DriverVerificationScreen extends StatefulWidget {
 class _DriverVerificationScreenState
     extends State<DriverVerificationScreen> {
 
-  File? profilePhoto;
-  File? idFront;
-  File? idBack;
-  File? licensePhoto;
-  File? carPhoto;
+  final profileUrlController =
+      TextEditingController();
 
-final plateController =
-    TextEditingController();
+  final idFrontUrlController =
+      TextEditingController();
 
-bool isLoading = false;
+  final idBackUrlController =
+      TextEditingController();
 
-  final picker = ImagePicker();
+  final licenseUrlController =
+      TextEditingController();
 
-  Future<String> uploadFile(
-  File file,
-  String path,
-) async {
+  final carPhotoUrlController =
+      TextEditingController();
 
-  final ref = FirebaseStorage.instance
-      .ref()
-      .child(path);
+  final plateController =
+      TextEditingController();
 
-  await ref.putFile(file);
-
-  return await ref.getDownloadURL();
-}
-
-  // ================= PICK IMAGE =================
-  Future<void> pickImage(Function(File) onPicked) async {
-
-    final picked = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 70,
-    );
-
-    if (picked != null) {
-
-      onPicked(File(picked.path));
-
-      setState(() {});
-    }
-  }
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +157,7 @@ bool isLoading = false;
             SizedBox(height: 10),
 
             Text(
-              "To ensure safety on our platform, we need to verify your credentials. Please upload clear photos of the documents below.",
+              "Paste image URLs for your verification documents.",
 
               style: TextStyle(
                 color: Colors.grey.shade700,
@@ -198,207 +171,190 @@ bool isLoading = false;
             // ================= PROFILE PHOTO =================
             verificationCard(
               title: "Profile Photo",
+
               subtitle:
-                  "Clear, forward-facing photo without sunglasses.",
+                  "Paste profile image URL.",
 
               icon: Icons.person_outline,
 
-              child: GestureDetector(
+              child: Column(
+                children: [
 
-                onTap: () {
-                  pickImage((file) {
-                    profilePhoto = file;
-                  });
-                },
+                  textField(
+                    controller:
+                        profileUrlController,
 
-                child: Container(
-                  height: 150,
-
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-
-                    borderRadius:
-                        BorderRadius.circular(20),
-
-                    border: Border.all(
-                      color: Colors.grey.shade300,
-                      style: BorderStyle.solid,
-                    ),
+                    hint:
+                        "https://example.com/profile.jpg",
                   ),
 
-                  child: profilePhoto == null
-                      ? Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
+                  SizedBox(height: 15),
 
-                          children: [
+                  if (profileUrlController
+                      .text
+                      .isNotEmpty)
 
-                            Icon(
-                              Icons.camera_alt,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
+                    ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(
+                        20,
+                      ),
 
-                            SizedBox(height: 10),
+                      child: Image.network(
+                        profileUrlController
+                            .text,
 
-                            Text(
-                              "Upload Photo",
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
 
-                              style: TextStyle(
-                                color: Colors.deepPurple,
-                                fontWeight:
-                                    FontWeight.bold,
+                        errorBuilder:
+                            (context, error,
+                                stackTrace) {
+
+                          return Container(
+                            height: 180,
+
+                            decoration:
+                                BoxDecoration(
+                              color: Colors
+                                  .grey.shade200,
+
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                20,
                               ),
                             ),
-                          ],
-                        )
-                      : ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(20),
 
-                          child: Image.file(
-                            profilePhoto!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        ),
-                ),
+                            child: Center(
+                              child: Text(
+                                "Invalid Image URL",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
               ),
             ),
 
             SizedBox(height: 25),
 
-          // ================= PLATE NUMBER =================
-verificationCard(
+            // ================= VEHICLE =================
+            verificationCard(
 
-  title: "Vehicle Information",
+              title: "Vehicle Information",
 
-  subtitle:
-      "Enter vehicle plate number and upload front car image.",
+              subtitle:
+                  "Enter plate number and car image URL.",
 
-  icon: Icons.directions_car,
+              icon: Icons.directions_car,
 
-  child: Column(
-    children: [
+              child: Column(
+                children: [
 
-      TextField(
-        controller: plateController,
+                  textField(
+                    controller:
+                        plateController,
 
-        decoration: InputDecoration(
-          hintText: "Plate Number",
-
-          filled: true,
-          fillColor: Colors.grey.shade100,
-
-          border: OutlineInputBorder(
-            borderRadius:
-                BorderRadius.circular(18),
-
-            borderSide: BorderSide.none,
-          ),
-        ),
-      ),
-
-      SizedBox(height: 20),
-
-      GestureDetector(
-
-        onTap: () {
-
-          pickImage((file) {
-            carPhoto = file;
-          });
-        },
-
-        child: Container(
-          height: 180,
-
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-
-            borderRadius:
-                BorderRadius.circular(20),
-          ),
-
-          child: carPhoto == null
-
-              ? Column(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-
-                    Icon(
-                      Icons.add_a_photo,
-                      size: 40,
-                      color: Colors.grey,
-                    ),
-
-                    SizedBox(height: 10),
-
-                    Text(
-                      "Upload Car Front Photo",
-                    ),
-                  ],
-                )
-
-              : ClipRRect(
-                  borderRadius:
-                      BorderRadius.circular(20),
-
-                  child: Image.file(
-                    carPhoto!,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
+                    hint: "Plate Number",
                   ),
-                ),
-        ),
-      ),
-    ],
-  ),
-),  
+
+                  SizedBox(height: 20),
+
+                  textField(
+                    controller:
+                        carPhotoUrlController,
+
+                    hint:
+                        "https://example.com/car.jpg",
+                  ),
+
+                  SizedBox(height: 15),
+
+                  if (carPhotoUrlController
+                      .text
+                      .isNotEmpty)
+
+                    ClipRRect(
+                      borderRadius:
+                          BorderRadius.circular(
+                        20,
+                      ),
+
+                      child: Image.network(
+                        carPhotoUrlController
+                            .text,
+
+                        height: 180,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+
+                        errorBuilder:
+                            (context, error,
+                                stackTrace) {
+
+                          return Container(
+                            height: 180,
+
+                            decoration:
+                                BoxDecoration(
+                              color: Colors
+                                  .grey.shade200,
+
+                              borderRadius:
+                                  BorderRadius
+                                      .circular(
+                                20,
+                              ),
+                            ),
+
+                            child: Center(
+                              child: Text(
+                                "Invalid Image URL",
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 25),
 
             // ================= ID CARD =================
             verificationCard(
+
               title: "Identity Card",
+
               subtitle:
-                  "National ID or Passport. Front and back side.",
+                  "Front and back image URLs.",
 
               icon: Icons.badge_outlined,
 
-              child: Row(
+              child: Column(
                 children: [
 
-                  Expanded(
-                    child: idBox(
+                  textField(
+                    controller:
+                        idFrontUrlController,
 
-                      title: "FRONT SIDE",
-
-                      image: idFront,
-
-                      onTap: () {
-                        pickImage((file) {
-                          idFront = file;
-                        });
-                      },
-                    ),
+                    hint:
+                        "Front ID Image URL",
                   ),
 
-                  SizedBox(width: 15),
+                  SizedBox(height: 15),
 
-                  Expanded(
-                    child: idBox(
+                  textField(
+                    controller:
+                        idBackUrlController,
 
-                      title: "BACK SIDE",
-
-                      image: idBack,
-
-                      onTap: () {
-                        pickImage((file) {
-                          idBack = file;
-                        });
-                      },
-                    ),
+                    hint:
+                        "Back ID Image URL",
                   ),
                 ],
               ),
@@ -408,67 +364,21 @@ verificationCard(
 
             // ================= LICENSE =================
             verificationCard(
+
               title: "Driver’s License",
+
               subtitle:
-                  "Valid commercial or personal driving permit.",
+                  "Paste license image URL.",
 
-              icon: Icons.workspace_premium_outlined,
+              icon:
+                  Icons.workspace_premium_outlined,
 
-              child: GestureDetector(
+              child: textField(
+                controller:
+                    licenseUrlController,
 
-                onTap: () {
-                  pickImage((file) {
-                    licensePhoto = file;
-                  });
-                },
-
-                child: Container(
-                  height: 180,
-
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-
-                    borderRadius:
-                        BorderRadius.circular(20),
-                  ),
-
-                  child: licensePhoto == null
-                      ? Column(
-                          mainAxisAlignment:
-                              MainAxisAlignment.center,
-
-                          children: [
-
-                            CircleAvatar(
-                              radius: 32,
-                              backgroundColor:
-                                  Colors.deepPurple,
-
-                              child: Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 35,
-                              ),
-                            ),
-
-                            SizedBox(height: 15),
-
-                            Text(
-                              "Tap to Capture",
-                            ),
-                          ],
-                        )
-                      : ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(20),
-
-                          child: Image.file(
-                            licensePhoto!,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                          ),
-                        ),
-                ),
+                hint:
+                    "https://example.com/license.jpg",
               ),
             ),
 
@@ -500,7 +410,7 @@ verificationCard(
 
                   Expanded(
                     child: Text(
-                      "Your data is encrypted and stored securely. We only use this information for verification purposes and do not share it with third parties.",
+                      "Your data is securely stored for verification purposes only.",
 
                       style: TextStyle(
                         color: Colors.black87,
@@ -529,159 +439,195 @@ verificationCard(
                   shape:
                       RoundedRectangleBorder(
                     borderRadius:
-                        BorderRadius.circular(30),
+                        BorderRadius.circular(
+                      30,
+                    ),
                   ),
                 ),
 
                 onPressed: () async {
 
-  if (profilePhoto == null ||
-      idFront == null ||
-      idBack == null ||
-      licensePhoto == null ||
-      carPhoto == null ||
-      plateController.text.isEmpty) {
+                  if (profileUrlController
+                          .text
+                          .isEmpty ||
+                      idFrontUrlController
+                          .text
+                          .isEmpty ||
+                      idBackUrlController
+                          .text
+                          .isEmpty ||
+                      licenseUrlController
+                          .text
+                          .isEmpty ||
+                      carPhotoUrlController
+                          .text
+                          .isEmpty ||
+                      plateController
+                          .text
+                          .isEmpty) {
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
 
-      SnackBar(
-        backgroundColor: Colors.red,
-        content: Text(
-          "Complete all verification fields",
-        ),
-      ),
-    );
+                      SnackBar(
+                        backgroundColor:
+                            Colors.red,
 
-    return;
-  }
-
-  setState(() {
-    isLoading = true;
-  });
-
-  try {
-
-    final user =
-        FirebaseAuth.instance.currentUser;
-
-    // ================= UPLOAD FILES =================
-
-    final profileUrl =
-        await uploadFile(
-      profilePhoto!,
-      "verification/${user!.uid}/profile.jpg",
-    );
-
-    final frontIdUrl =
-        await uploadFile(
-      idFront!,
-      "verification/${user.uid}/id_front.jpg",
-    );
-
-    final backIdUrl =
-        await uploadFile(
-      idBack!,
-      "verification/${user.uid}/id_back.jpg",
-    );
-
-    final licenseUrl =
-        await uploadFile(
-      licensePhoto!,
-      "verification/${user.uid}/license.jpg",
-    );
-
-    final carUrl =
-        await uploadFile(
-      carPhoto!,
-      "verification/${user.uid}/car.jpg",
-    );
-
-    // ================= SAVE TO FIRESTORE =================
-
-    await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user.uid)
-        .update({
-
-      "profilePhotoUrl": profileUrl,
-
-      "idFrontUrl": frontIdUrl,
-      "idBackUrl": backIdUrl,
-
-      "licenseUrl": licenseUrl,
-
-      "carPhotoUrl": carUrl,
-
-      "plateNumber":
-          plateController.text,
-
-      // STATUS
-      "verificationStatus":
-          "under_review",
-
-      "isVerified": false,
-    });
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-
-      SnackBar(
-        backgroundColor: Colors.green,
-
-        content: Text(
-          "Documents submitted successfully",
-        ),
-      ),
-    );
-
-    Navigator.pop(context);
-
-  } catch (e) {
-
-    ScaffoldMessenger.of(context)
-        .showSnackBar(
-
-      SnackBar(
-        backgroundColor: Colors.red,
-        content: Text(e.toString()),
-      ),
-    );
-  }
-
-  setState(() {
-    isLoading = false;
-  });
-},
-
-                child: Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment.center,
-
-                  children: [
-
-                    Text(
-                      "Continue",
-
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: Colors.white,
-                        fontWeight:
-                            FontWeight.bold,
+                        content: Text(
+                          "Complete all verification fields",
+                        ),
                       ),
-                    ),
+                    );
 
-                    SizedBox(width: 10),
+                    return;
+                  }
 
-                    Icon(
-                      Icons.arrow_forward,
-                      color: Colors.white,
-                    ),
-                  ],
-                ),
+                  setState(() {
+                    isLoading = true;
+                  });
+
+                  try {
+
+                    final user =
+                        FirebaseAuth.instance
+                            .currentUser;
+
+                    await FirebaseFirestore
+                        .instance
+                        .collection("users")
+                        .doc(user!.uid)
+                        .update({
+
+                      "profilePhotoUrl":
+                          profileUrlController
+                              .text,
+
+                      "idFrontUrl":
+                          idFrontUrlController
+                              .text,
+
+                      "idBackUrl":
+                          idBackUrlController
+                              .text,
+
+                      "licenseUrl":
+                          licenseUrlController
+                              .text,
+
+                      "carPhotoUrl":
+                          carPhotoUrlController
+                              .text,
+
+                      "plateNumber":
+                          plateController.text,
+
+                      "verificationStatus":
+                          "under_review",
+
+                      "isVerified": false,
+                    });
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+
+                      SnackBar(
+                        backgroundColor:
+                            Colors.green,
+
+                        content: Text(
+                          "Documents submitted successfully",
+                        ),
+                      ),
+                    );
+
+                    Navigator.pop(context);
+
+                  } catch (e) {
+
+                    ScaffoldMessenger.of(
+                            context)
+                        .showSnackBar(
+
+                      SnackBar(
+                        backgroundColor:
+                            Colors.red,
+
+                        content:
+                            Text(e.toString()),
+                      ),
+                    );
+                  }
+
+                  setState(() {
+                    isLoading = false;
+                  });
+                },
+
+                child: isLoading
+                    ? CircularProgressIndicator(
+                        color: Colors.white,
+                      )
+                    : Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment
+                                .center,
+
+                        children: [
+
+                          Text(
+                            "Continue",
+
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.white,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+
+                          SizedBox(width: 10),
+
+                          Icon(
+                            Icons.arrow_forward,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  // ================= TEXT FIELD =================
+  Widget textField({
+    required TextEditingController
+        controller,
+    required String hint,
+  }) {
+
+    return TextField(
+      controller: controller,
+
+      onChanged: (value) {
+        setState(() {});
+      },
+
+      decoration: InputDecoration(
+        hintText: hint,
+
+        filled: true,
+        fillColor: Colors.grey.shade100,
+
+        border: OutlineInputBorder(
+          borderRadius:
+              BorderRadius.circular(18),
+
+          borderSide: BorderSide.none,
         ),
       ),
     );
@@ -720,7 +666,8 @@ verificationCard(
               Expanded(
                 child: Column(
                   crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                      CrossAxisAlignment
+                          .start,
 
                   children: [
 
@@ -764,66 +711,6 @@ verificationCard(
 
           child,
         ],
-      ),
-    );
-  }
-
-  // ================= ID BOX =================
-  Widget idBox({
-    required String title,
-    required File? image,
-    required VoidCallback onTap,
-  }) {
-
-    return GestureDetector(
-
-      onTap: onTap,
-
-      child: Container(
-        height: 120,
-
-        decoration: BoxDecoration(
-          color: Colors.grey.shade100,
-
-          borderRadius:
-              BorderRadius.circular(18),
-        ),
-
-        child: image == null
-            ? Column(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
-
-                children: [
-
-                  Icon(
-                    Icons.file_copy_outlined,
-                    color: Colors.grey,
-                  ),
-
-                  SizedBox(height: 10),
-
-                  Text(
-                    title,
-
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-                ],
-              )
-            : ClipRRect(
-                borderRadius:
-                    BorderRadius.circular(18),
-
-                child: Image.file(
-                  image,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                ),
-              ),
       ),
     );
   }
