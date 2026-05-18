@@ -234,14 +234,71 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
   ), 
 
               if (ride['status'] == "accepted")
-                Text(
-                  "Driver accepted your ride",
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontWeight:
-                        FontWeight.bold,
-                  ),
-                ),
+  Column(
+    crossAxisAlignment:
+        CrossAxisAlignment.start,
+
+    children: [
+
+      Text(
+        "Driver accepted your ride",
+
+        style: TextStyle(
+          color: Colors.green,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      SizedBox(height: 14),
+
+      Container(
+        padding: EdgeInsets.all(14),
+
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+
+          borderRadius:
+              BorderRadius.circular(18),
+        ),
+
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+
+          children: [
+
+            Text(
+              "Driver Details",
+
+              style: TextStyle(
+                fontWeight:
+                    FontWeight.bold,
+                fontSize: 16,
+              ),
+            ),
+
+            SizedBox(height: 10),
+
+            Text(
+              "Name: ${ride['driverName'] ?? ''}",
+            ),
+
+            SizedBox(height: 6),
+
+            Text(
+              "Phone: ${ride['driverPhone'] ?? ''}",
+            ),
+
+            SizedBox(height: 6),
+
+            Text(
+              "Plate Number: ${ride['driverPlate'] ?? ''}",
+            ),
+          ],
+        ),
+      ),
+    ],
+  ),
 
               if (ride['status'] == "completed")
                 Text(

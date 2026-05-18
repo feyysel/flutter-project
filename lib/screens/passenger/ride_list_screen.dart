@@ -311,9 +311,30 @@ void showRideConfirmation(dynamic posts) {
   final passengerData =
       passengerDoc.data();
 
+      final driverDoc =
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(driverId)
+        .get();
+
+final driverData =
+    driverDoc.data();
+
   await FirebaseFirestore.instance
       .collection("ride_requests")
       .add({
+
+        "driverName":
+    driverData?["name"],
+
+"driverPhone":
+    driverData?["phone"],
+
+"driverPlate":
+    driverData?["plateNumber"],
+
+"passengerPhone":
+    passengerData?["phone"],
 
     "rideId": rideId,
 
@@ -333,6 +354,22 @@ void showRideConfirmation(dynamic posts) {
     "createdAt":
         FieldValue.serverTimestamp(),
   });
+
+  await FirebaseFirestore.instance
+    .collection("notifications")
+    .add({
+
+  "userId": driverId,
+
+  "title": "New Ride Request",
+
+  "body":
+      "${passengerData?["name"]} requested a ride",
+
+  "createdAt":
+      FieldValue.serverTimestamp(),
+});
+  
 
   ScaffoldMessenger.of(context)
       .showSnackBar(
