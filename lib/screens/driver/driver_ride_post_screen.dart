@@ -25,77 +25,86 @@ class _DriverRidePostScreenState
   bool isLoading = false;
 
   // ================= POST RIDE =================
-  Future<void> postRide() async {
+Future<void> postRide() async {
 
-    if (fromController.text.isEmpty ||
-    toController.text.isEmpty ||
-    priceController.text.isEmpty ||
-    seatsController.text.isEmpty ||
-    timeController.text.isEmpty) {
+  if (fromController.text.isEmpty ||
+  toController.text.isEmpty ||
+  priceController.text.isEmpty ||
+  seatsController.text.isEmpty ||
+  timeController.text.isEmpty) {
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text("Fill all fields"),
-        ),
-      );
-
-      return;
-    }
-
-    setState(() {
-      isLoading = true;
-    });
-
-    final user = FirebaseAuth.instance.currentUser;
-
-    final driverDoc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user!.uid)
-        .get();
-
-    final driverData = driverDoc.data();
-
-    await FirebaseFirestore.instance
-        .collection("posts")
-        .add({
-
-      "driverId": user.uid,
-      "driverName": driverData?["name"],
-      //"vehicleModel": driverData?["vehicleModel"],
-
-      "from": fromController.text,
-      "to": toController.text,
-
-     "price": priceController.text,
-
-"seats": seatsController.text,
-"isOnline": true,
-
-"time": timeController.text,
-
-"vehicleModel":
-    driverData?["vehicleModel"] ?? "Economy",
-
-      "createdAt": FieldValue.serverTimestamp(),
-    });
-
-    setState(() {
-      isLoading = false;
-    });
-
-    fromController.clear();
-    toController.clear();
-    priceController.clear();
-    seatsController.clear();
-    timeController.clear();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: Colors.green,
-        content: Text("Ride Posted Successfully"),
+        backgroundColor: Colors.red,
+        content: Text("Fill all fields"),
       ),
     );
+
+    return;
   }
+
+  final user = FirebaseAuth.instance.currentUser;
+
+  final driverDoc = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(user!.uid)
+      .get();
+
+  final driverData = driverDoc.data();
+
+  //ADDED VERIFICATION CHECK (ONLY CHANGE)
+  if (driverData?["isVerified"] != true) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.orange,
+        content: Text("Verify your account first"),
+      ),
+    );
+    return;
+  }
+
+  setState(() {
+    isLoading = true;
+  });
+
+  await FirebaseFirestore.instance
+      .collection("posts")
+      .add({
+
+    "driverId": user.uid,
+    "driverName": driverData?["name"],
+
+    "from": fromController.text,
+    "to": toController.text,
+
+    "price": priceController.text,
+    "seats": seatsController.text,
+    "isOnline": true,
+    "time": timeController.text,
+
+    "vehicleModel":
+        driverData?["vehicleModel"] ?? "Economy",
+
+    "createdAt": FieldValue.serverTimestamp(),
+  });
+
+  setState(() {
+    isLoading = false;
+  });
+
+  fromController.clear();
+  toController.clear();
+  priceController.clear();
+  seatsController.clear();
+  timeController.clear();
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      backgroundColor: Colors.green,
+      content: Text("Ride Posted Successfully"),
+    ),
+  );
+}
 
   Widget buildRideCard(dynamic ride) {
 
@@ -578,12 +587,13 @@ StreamBuilder<QuerySnapshot>(
         ),
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
+     bottomNavigationBar: BottomNavigationBar(
   currentIndex: currentIndex,
-  backgroundColor: Colors.white,
+  backgroundColor:Color(0xFF050816),
   selectedItemColor: Colors.deepPurple,
   unselectedItemColor: Colors.grey,
   type: BottomNavigationBarType.fixed,
+  elevation: 10,
 
   onTap: (index) {
     setState(() {

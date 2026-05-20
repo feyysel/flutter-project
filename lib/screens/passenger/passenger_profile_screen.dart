@@ -17,48 +17,38 @@ class PassengerProfileScreen extends StatefulWidget {
 class _PassengerProfileScreenState
     extends State<PassengerProfileScreen> {
 
-  final nameController =
-      TextEditingController();
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final imageController = TextEditingController();
 
-  final phoneController =
-      TextEditingController();
+  void showEditProfileDialog(dynamic userData) {
 
-  final imageController =
-      TextEditingController();
-
-  void showEditProfileDialog(
-      dynamic userData) {
-
-    nameController.text =
-        userData?["name"] ?? "";
-
-    phoneController.text =
-        userData?["phone"] ?? "";
-
-    imageController.text =
-        userData?["profileImage"] ?? "";
+    nameController.text = userData?["name"] ?? "";
+    phoneController.text = userData?["phone"] ?? "";
+    imageController.text = userData?["profileImage"] ?? "";
 
     showDialog(
-
       context: context,
-
       builder: (context) {
-
         return AlertDialog(
+          backgroundColor: Color(0xFF11151F), // DARK
 
-          title: Text("Edit Profile"),
+          title: Text(
+            "Edit Profile",
+            style: TextStyle(color: Colors.white),
+          ),
 
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
-
               children: [
 
                 TextField(
                   controller: nameController,
-
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: "Name",
+                    labelStyle: TextStyle(color: Colors.grey),
                   ),
                 ),
 
@@ -66,9 +56,10 @@ class _PassengerProfileScreenState
 
                 TextField(
                   controller: phoneController,
-
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     labelText: "Phone",
+                    labelStyle: TextStyle(color: Colors.grey),
                   ),
                 ),
 
@@ -76,10 +67,10 @@ class _PassengerProfileScreenState
 
                 TextField(
                   controller: imageController,
-
+                  style: TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    labelText:
-                        "Profile Image URL",
+                    labelText: "Profile Image URL",
+                    labelStyle: TextStyle(color: Colors.grey),
                   ),
                 ),
               ],
@@ -87,51 +78,38 @@ class _PassengerProfileScreenState
           ),
 
           actions: [
-
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-
-              child: Text("Cancel"),
+              child: Text("Cancel",
+                  style: TextStyle(color: Colors.grey)),
             ),
 
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.deepPurple,
+              ),
 
               onPressed: () async {
 
-                final user =
-                    FirebaseAuth
-                        .instance.currentUser;
+                final user = FirebaseAuth.instance.currentUser;
 
-                await FirebaseFirestore
-                    .instance
+                await FirebaseFirestore.instance
                     .collection("users")
                     .doc(user!.uid)
                     .update({
-
-                  "name":
-                      nameController.text,
-
-                  "phone":
-                      phoneController.text,
-
-                  "profileImage":
-                      imageController.text,
+                  "name": nameController.text,
+                  "phone": phoneController.text,
+                  "profileImage": imageController.text,
                 });
 
                 Navigator.pop(context);
 
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(
-
+                ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    backgroundColor:
-                        Colors.green,
-
-                    content: Text(
-                      "Profile updated",
-                    ),
+                    backgroundColor: Colors.green,
+                    content: Text("Profile updated"),
                   ),
                 );
 
@@ -149,9 +127,7 @@ class _PassengerProfileScreenState
   @override
   Widget build(BuildContext context) {
 
-    final firebaseUser =
-        FirebaseAuth.instance.currentUser;
-
+    final firebaseUser = FirebaseAuth.instance.currentUser;
     int currentIndex = 2;
 
     return FutureBuilder<DocumentSnapshot>(
@@ -166,39 +142,27 @@ class _PassengerProfileScreenState
 
         if (snapshot.hasData &&
             snapshot.data!.data() != null) {
-
-          user = snapshot.data!.data()
-              as Map<String, dynamic>;
+          user = snapshot.data!.data() as Map<String, dynamic>;
         }
 
         return Scaffold(
-          backgroundColor: Colors.grey[100],
+          backgroundColor: Color(0xFF050816), // DARK
 
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: Color(0xFF11151F),
             elevation: 0,
-
             title: Text(
               "Profile",
-              style: TextStyle(
-                color: Colors.black,
-              ),
+              style: TextStyle(color: Colors.white),
             ),
 
             actions: [
-
               IconButton(
-                icon: Icon(
-                  Icons.edit,
-                  color: Colors.purple,
-                ),
-
+                icon: Icon(Icons.edit, color: Colors.deepPurple),
                 onPressed: () {
                   showEditProfileDialog(user);
                 },
               ),
-
-              SizedBox(width: 15),
             ],
           ),
 
@@ -208,155 +172,88 @@ class _PassengerProfileScreenState
             child: Column(
               children: [
 
-                // PROFILE IMAGE
                 CircleAvatar(
                   radius: 40,
-
-                  backgroundImage:
-                      user != null &&
-                              user["profileImage"] !=
-                                  null &&
-                              user["profileImage"] !=
-                                  ""
-
-                          ? NetworkImage(
-                              user["profileImage"],
-                            )
-
-                          : null,
-
-                  child:
-                      user == null ||
-                              user["profileImage"] ==
-                                  null ||
-                              user["profileImage"] ==
-                                  ""
-
-                          ? Icon(
-                              Icons.person,
-                              size: 40,
-                            )
-
-                          : null,
+                  backgroundImage: user != null &&
+                          user["profileImage"] != null &&
+                          user["profileImage"] != ""
+                      ? NetworkImage(user["profileImage"])
+                      : null,
+                  child: user == null ||
+                          user["profileImage"] == null ||
+                          user["profileImage"] == ""
+                      ? Icon(Icons.person, size: 40, color: Colors.white)
+                      : null,
+                  backgroundColor: Color(0xFF11151F),
                 ),
 
                 SizedBox(height: 15),
 
-                // NAME
                 Text(
                   user?["name"] ?? "Guest",
-
                   style: TextStyle(
                     fontSize: 22,
-                    fontWeight:
-                        FontWeight.bold,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
 
                 SizedBox(height: 8),
 
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 5,
-                  ),
-
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.purple
-                        .withOpacity(0.1),
-
-                    borderRadius:
-                        BorderRadius.circular(
-                      20,
-                    ),
+                    color: Colors.deepPurple.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-
                   child: Text(
                     "PASSENGER",
-
-                    style: TextStyle(
-                      color: Colors.purple,
-                    ),
+                    style: TextStyle(color: Colors.deepPurple),
                   ),
                 ),
 
                 SizedBox(height: 25),
 
-                // STATS
                 Row(
                   children: [
-
-                    _statCard(
-                      "Total Trips",
-                      "12",
-                    ),
-
+                    _statCard("Total Trips", "12"),
                     SizedBox(width: 15),
-
-                    _statCard(
-                      "Rewards",
-                      "1.2k",
-                    ),
+                    _statCard("Rewards", "1.2k"),
                   ],
                 ),
 
                 SizedBox(height: 25),
 
-                // MENU LIST
-                _menuItem(
-                  Icons.history,
-                  "Trip History",
+                _menuItem(Icons.history, "Trip History",
+                    onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => PassengerHistoryScreen()),
+                  );
+                }),
 
-                  onTap: () {
-                    Navigator.push(
-                      context,
-
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            PassengerHistoryScreen(),
-                      ),
-                    );
-                  },
-                ),
-
-                _menuItem(
-                  Icons.local_offer,
-                  "Promotions",
-                ),
-
-                _menuItem(
-                  Icons.settings,
-                  "Settings",
-                ),
+                _menuItem(Icons.local_offer, "Promotions"),
+                _menuItem(Icons.settings, "Settings"),
 
                 SizedBox(height: 30),
 
-                // LOGOUT
                 SizedBox(
                   width: double.infinity,
                   height: 50,
 
                   child: ElevatedButton(
-
-                    style:
-                        ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Colors.grey[300],
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF11151F),
                     ),
 
                     onPressed: () {
-                      Navigator.popUntil(
-                        context,
-                        (route) => route.isFirst,
-                      );
+                      Navigator.popUntil(context, (route) => route.isFirst);
                     },
 
                     child: Text(
                       "Log Out",
-
-                      style: TextStyle(
-                        color: Colors.black,
-                      ),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
@@ -364,86 +261,43 @@ class _PassengerProfileScreenState
             ),
           ),
 
-          bottomNavigationBar:
-              BottomNavigationBar(
-
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: Color(0xFF11151F),
+            selectedItemColor: Colors.deepPurple,
+            unselectedItemColor: Colors.grey,
+            type: BottomNavigationBarType.fixed,
             currentIndex: currentIndex,
 
-            backgroundColor:
-                Colors.white,
-
-            selectedItemColor:
-                Colors.deepPurple,
-
-            unselectedItemColor:
-                Colors.grey,
-
-            type:
-                BottomNavigationBarType.fixed,
-
             onTap: (index) {
-
               setState(() {
                 currentIndex = index;
               });
 
-              // HOME
               if (index == 0) {
-
                 Navigator.pushReplacement(
                   context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        PassengerHomeScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => PassengerHomeScreen()),
                 );
-              }
-
-              // ACTIVITY
-              else if (index == 1) {
-
+              } else if (index == 1) {
                 Navigator.pushReplacement(
                   context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        PassengerActivityScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => PassengerActivityScreen()),
                 );
-              }
-
-              // PROFILE
-              else if (index == 2) {
-
+              } else if (index == 2) {
                 Navigator.pushReplacement(
                   context,
-
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        PassengerProfileScreen(),
-                  ),
+                  MaterialPageRoute(builder: (_) => PassengerProfileScreen()),
                 );
               }
             },
 
             items: const [
-
               BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: "Home",
-              ),
-
+                  icon: Icon(Icons.home), label: "Home"),
               BottomNavigationBarItem(
-                icon:
-                    Icon(Icons.receipt_long),
-                label: "Activity",
-              ),
-
+                  icon: Icon(Icons.receipt_long), label: "Activity"),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: "Profile",
-              ),
+                  icon: Icon(Icons.person), label: "Profile"),
             ],
           ),
         );
@@ -451,40 +305,24 @@ class _PassengerProfileScreenState
     );
   }
 
-  Widget _statCard(
-      String title,
-      String value) {
-
+  Widget _statCard(String title, String value) {
     return Expanded(
       child: Container(
-
         padding: EdgeInsets.all(20),
-
         decoration: BoxDecoration(
-          color: Colors.white,
-
-          borderRadius:
-              BorderRadius.circular(15),
+          color: Color(0xFF11151F),
+          borderRadius: BorderRadius.circular(15),
         ),
-
         child: Column(
           children: [
-
-            Text(
-              title,
-              style:
-                  TextStyle(color: Colors.grey),
-            ),
-
+            Text(title, style: TextStyle(color: Colors.grey)),
             SizedBox(height: 8),
-
             Text(
               value,
-
               style: TextStyle(
                 fontSize: 20,
-                fontWeight:
-                    FontWeight.bold,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
           ],
@@ -493,69 +331,32 @@ class _PassengerProfileScreenState
     );
   }
 
-  Widget _menuItem(
-    IconData icon,
-    String title,
-    {VoidCallback? onTap}
-  ) {
-
+  Widget _menuItem(IconData icon, String title, {VoidCallback? onTap}) {
     return GestureDetector(
-
       onTap: onTap,
-
       child: Container(
-
-        margin: EdgeInsets.only(
-          bottom: 15,
-        ),
-
-        padding: EdgeInsets.symmetric(
-          horizontal: 18,
-          vertical: 18,
-        ),
-
+        margin: EdgeInsets.only(bottom: 15),
+        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         decoration: BoxDecoration(
-          color: Colors.white,
-
-          borderRadius:
-              BorderRadius.circular(20),
-
-          boxShadow: [
-
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-            ),
-          ],
+          color: Color(0xFF11151F),
+          borderRadius: BorderRadius.circular(20),
         ),
-
         child: Row(
           children: [
-
-            Icon(
-              icon,
-              color: Colors.deepPurple,
-            ),
-
+            Icon(icon, color: Colors.deepPurple),
             SizedBox(width: 15),
-
             Expanded(
               child: Text(
                 title,
-
                 style: TextStyle(
                   fontSize: 16,
-                  fontWeight:
-                      FontWeight.w500,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
                 ),
               ),
             ),
-
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 16,
-              color: Colors.grey,
-            ),
+            Icon(Icons.arrow_forward_ios,
+                size: 16, color: Colors.grey),
           ],
         ),
       ),

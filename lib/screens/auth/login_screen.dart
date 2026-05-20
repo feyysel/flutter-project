@@ -7,6 +7,7 @@ import '../../models/user_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/notification_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 
 class LoginScreen extends StatefulWidget {
@@ -132,9 +133,58 @@ class _LoginScreenState extends State<LoginScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: () {},
-                          child: Text("Forgot Password?"),
-                        ),
+
+  onPressed: () async {
+
+    if (emailController.text.trim().isEmpty) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            "Enter your email first",
+          ),
+        ),
+      );
+
+      return;
+    }
+
+    try {
+
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(
+
+        email: emailController.text.trim(),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+
+        SnackBar(
+          backgroundColor: Colors.green,
+          content: Text(
+            "Password reset email sent",
+          ),
+        ),
+      );
+
+    } catch (e) {
+
+      ScaffoldMessenger.of(context).showSnackBar(
+
+        SnackBar(
+          backgroundColor: Colors.red,
+          content: Text(
+            e.toString(),
+          ),
+        ),
+      );
+    }
+  },
+
+  child: Text("Forgot Password?"),
+),
                       ),
 
                       SizedBox(height: 10),
@@ -227,7 +277,7 @@ if (token != null) {
 
               SizedBox(height: 20),
 
-              Row(
+             /* Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
@@ -243,7 +293,7 @@ if (token != null) {
                     ),
                   ),
                 ],
-              ),
+              ),*/
 
               SizedBox(height: 30),
 

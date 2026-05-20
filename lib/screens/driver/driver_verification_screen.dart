@@ -37,21 +37,21 @@ class _DriverVerificationScreenState
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor: Color(0xFFF7F7F7),
+      backgroundColor: Color(0xFF050816),
 
       appBar: AppBar(
-        backgroundColor: Color(0xFFF7F7F7),
+        backgroundColor: Color(0xFF050816),
         elevation: 0,
 
         leading: BackButton(
-          color: Colors.black,
+          color: Colors.white,
         ),
 
         title: Text(
           "Identity Verification",
 
           style: TextStyle(
-            color: Colors.black,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -67,7 +67,7 @@ class _DriverVerificationScreenState
             ),
 
             decoration: BoxDecoration(
-              color: Colors.deepPurple.shade50,
+              color: Colors.deepPurple.withOpacity(0.2),
               borderRadius:
                   BorderRadius.circular(18),
             ),
@@ -134,7 +134,7 @@ class _DriverVerificationScreenState
                     height: 6,
 
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
+                      color: Color(0xFF11151F),
                       borderRadius:
                           BorderRadius.circular(20),
                     ),
@@ -151,6 +151,7 @@ class _DriverVerificationScreenState
               style: TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
             ),
 
@@ -160,7 +161,7 @@ class _DriverVerificationScreenState
               "Paste image URLs for your verification documents.",
 
               style: TextStyle(
-                color: Colors.grey.shade700,
+                color: Colors.grey,
                 fontSize: 16,
                 height: 1.5,
               ),
@@ -168,7 +169,7 @@ class _DriverVerificationScreenState
 
             SizedBox(height: 35),
 
-            // ================= PROFILE PHOTO =================
+            // PROFILE PHOTO
             verificationCard(
               title: "Profile Photo",
 
@@ -217,8 +218,7 @@ class _DriverVerificationScreenState
 
                             decoration:
                                 BoxDecoration(
-                              color: Colors
-                                  .grey.shade200,
+                              color: Color(0xFF1A1F2E),
 
                               borderRadius:
                                   BorderRadius
@@ -230,6 +230,9 @@ class _DriverVerificationScreenState
                             child: Center(
                               child: Text(
                                 "Invalid Image URL",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           );
@@ -242,7 +245,7 @@ class _DriverVerificationScreenState
 
             SizedBox(height: 25),
 
-            // ================= VEHICLE =================
+            // VEHICLE
             verificationCard(
 
               title: "Vehicle Information",
@@ -301,8 +304,7 @@ class _DriverVerificationScreenState
 
                             decoration:
                                 BoxDecoration(
-                              color: Colors
-                                  .grey.shade200,
+                              color: Color(0xFF1A1F2E),
 
                               borderRadius:
                                   BorderRadius
@@ -314,6 +316,9 @@ class _DriverVerificationScreenState
                             child: Center(
                               child: Text(
                                 "Invalid Image URL",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           );
@@ -326,7 +331,7 @@ class _DriverVerificationScreenState
 
             SizedBox(height: 25),
 
-            // ================= ID CARD =================
+            // ID CARD
             verificationCard(
 
               title: "Identity Card",
@@ -362,7 +367,7 @@ class _DriverVerificationScreenState
 
             SizedBox(height: 25),
 
-            // ================= LICENSE =================
+            // LICENSE
             verificationCard(
 
               title: "Driver’s License",
@@ -389,7 +394,7 @@ class _DriverVerificationScreenState
               padding: EdgeInsets.all(18),
 
               decoration: BoxDecoration(
-                color: Colors.deepPurple.shade50,
+                color: Colors.deepPurple.withOpacity(0.2),
 
                 borderRadius:
                     BorderRadius.circular(22),
@@ -413,7 +418,7 @@ class _DriverVerificationScreenState
                       "Your data is securely stored for verification purposes only.",
 
                       style: TextStyle(
-                        color: Colors.black87,
+                        color: Colors.white70,
                         height: 1.5,
                       ),
                     ),
@@ -603,7 +608,7 @@ class _DriverVerificationScreenState
     );
   }
 
-  // ================= TEXT FIELD =================
+  // TEXT FIELD
   Widget textField({
     required TextEditingController
         controller,
@@ -613,6 +618,10 @@ class _DriverVerificationScreenState
     return TextField(
       controller: controller,
 
+      style: TextStyle(
+        color: Colors.white,
+      ),
+
       onChanged: (value) {
         setState(() {});
       },
@@ -620,8 +629,12 @@ class _DriverVerificationScreenState
       decoration: InputDecoration(
         hintText: hint,
 
+        hintStyle: TextStyle(
+          color: Colors.grey,
+        ),
+
         filled: true,
-        fillColor: Colors.grey.shade100,
+        fillColor: Color(0xFF1A1F2E),
 
         border: OutlineInputBorder(
           borderRadius:
@@ -633,7 +646,7 @@ class _DriverVerificationScreenState
     );
   }
 
-  // ================= CARD =================
+  // CARD
   Widget verificationCard({
     required String title,
     required String subtitle,
@@ -645,7 +658,7 @@ class _DriverVerificationScreenState
       padding: EdgeInsets.all(22),
 
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Color(0xFF11151F),
 
         borderRadius:
             BorderRadius.circular(28),
@@ -678,6 +691,7 @@ class _DriverVerificationScreenState
                         fontSize: 28,
                         fontWeight:
                             FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
 
@@ -697,7 +711,7 @@ class _DriverVerificationScreenState
 
               CircleAvatar(
                 backgroundColor:
-                    Colors.deepPurple.shade50,
+                    Colors.deepPurple.withOpacity(0.2),
 
                 child: Icon(
                   icon,
