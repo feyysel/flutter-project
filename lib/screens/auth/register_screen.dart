@@ -212,7 +212,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
             SizedBox(height: 30),
 
-            Center(child: Text("OR SIGN UP WITH")),
+           /* Center(child: Text("OR SIGN UP WITH")),
 
             SizedBox(height: 20),
 
@@ -232,7 +232,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ],
-            ),
+            ),*/
 
             SizedBox(height: 30),
 

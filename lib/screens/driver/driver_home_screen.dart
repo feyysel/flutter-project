@@ -91,7 +91,7 @@ void listenNotifications() {
     }
   });
 }
-
+/*
 Future<void> resetDriverEarnings() async {
 
   final user =
@@ -124,7 +124,7 @@ Future<void> resetDriverEarnings() async {
       ),
     ),
   );
-}
+}*/
 
   @override
   Widget build(BuildContext context) {
@@ -133,37 +133,30 @@ Future<void> resetDriverEarnings() async {
       body: Stack(
         children: [
 
-          // ================= REAL MAP =================
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: LatLng(9.1450, 40.4897),
-              initialZoom: 13,
-            ),
-
-            children: [
-
-              TileLayer(
-                urlTemplate:
-                   "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png",
-                userAgentPackageName: "com.example.app",
-              ),
-
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: LatLng(9.1450, 40.4897),
-                    width: 80,
-                    height: 80,
-                    child: Icon(
-                      Icons.location_pin,
-                      color: Colors.deepPurple,
-                      size: 45,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          // ================= FAKE MAP (NETWORK IMAGE) =================
+Container(
+  width: double.infinity,
+  height: double.infinity,
+  decoration: BoxDecoration(
+    image: DecorationImage(
+      image: NetworkImage(
+        "https://i1-e.pinimg.com/1200x/9e/1e/7c/9e1e7c7983352dc78b81a3dd53fc4013.jpg",
+      ),
+      fit: BoxFit.cover,
+      colorFilter: ColorFilter.mode(
+        Colors.blue.shade900.withOpacity(0.65),
+        BlendMode.darken,
+      ),
+    ),
+  ),
+  child: Center(
+    child: Icon(
+      Icons.location_pin,
+      color: Colors.deepPurple,
+      size: 45,
+    ),
+  ),
+),
 
           // ================= CONTENT =================
           SafeArea(
@@ -177,11 +170,14 @@ Future<void> resetDriverEarnings() async {
                     children: [
 
                       CircleAvatar(
-                        radius: 22,
-                        backgroundImage: NetworkImage(
-                          "https://i.pravatar.cc/150?img=12",
-                        ),
-                      ),
+  radius: 18,
+  backgroundColor: Color(0xFF11151F),
+  child: Icon(
+    Icons.person,
+    color: Colors.white,
+    size: 20,
+  ),
+),
 
                       SizedBox(width: 10),
 

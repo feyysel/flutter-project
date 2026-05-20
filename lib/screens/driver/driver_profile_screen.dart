@@ -512,118 +512,7 @@ SizedBox(height: 28),
 
                     SizedBox(height: 28),
 
-                    // ================= VEHICLE =================
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          "Active Vehicle",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 16),
-
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                      ),
-                      child: Container(
-                        padding: EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Color(0xFF11151F),
-                          borderRadius: BorderRadius.circular(24),
-                        ),
-                        child: Row(
-                          children: [
-
-                            // Car Image
-                            ClipRRect(
-                              borderRadius:
-                                  BorderRadius.circular(14),
-                              child: Image.network(
-                                "https://images.unsplash.com/photo-1503376780353-7e6692767b70",
-                                width: 110,
-                                height: 80,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-
-                            SizedBox(width: 15),
-
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
-                                children: [
-
-                                  Text(
-                                    driverData!["vehicleModel"] ??
-                                        "Vehicle",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 24,
-                                      fontWeight:
-                                          FontWeight.bold,
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 6),
-
-                                  Text(
-                                    driverData!["vehicleColor"] ??
-                                        "Unknown Color",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-
-                                  SizedBox(height: 4),
-
-                                  Text(
-                                    driverData!["plateNumber"] ??
-                                        "",
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurple,
-                                borderRadius:
-                                    BorderRadius.circular(18),
-                              ),
-                              child: Text(
-                                "ACTIVE",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(height: 30),
+                    
 
                     // ================= SETTINGS =================
                     Padding(
@@ -718,12 +607,13 @@ SizedBox(height: 28),
         
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
+     bottomNavigationBar: BottomNavigationBar(
   currentIndex: currentIndex,
-  backgroundColor: Colors.white,
+  backgroundColor:Color(0xFF050816),
   selectedItemColor: Colors.deepPurple,
   unselectedItemColor: Colors.grey,
   type: BottomNavigationBarType.fixed,
+  elevation: 10,
 
   onTap: (index) {
     setState(() {

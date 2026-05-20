@@ -9,18 +9,24 @@ class DriverHistoryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
 
     return Scaffold(
+      backgroundColor: Color(0xFF050816),
+
       appBar: AppBar(
-        title: Text("Trip History"),
+        title: Text(
+          "Trip History",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(0xFF11151F),
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
 
       body: StreamBuilder<QuerySnapshot>(
-
         stream: FirebaseFirestore.instance
             .collection("ride_history")
             .where(
               "driverId",
-              isEqualTo:
-                  FirebaseAuth.instance.currentUser!.uid,
+              isEqualTo: FirebaseAuth.instance.currentUser!.uid,
             )
             .snapshots(),
 
@@ -36,14 +42,15 @@ class DriverHistoryScreen extends StatelessWidget {
 
           if (rides.isEmpty) {
             return Center(
-              child: Text("No completed trips"),
+              child: Text(
+                "No completed trips",
+                style: TextStyle(color: Colors.white70),
+              ),
             );
           }
 
           return ListView.builder(
-
             padding: EdgeInsets.all(16),
-
             itemCount: rides.length,
 
             itemBuilder: (context, index) {
@@ -55,31 +62,27 @@ class DriverHistoryScreen extends StatelessWidget {
                 padding: EdgeInsets.all(18),
 
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.circular(20),
-
+                  color: Color(0xFF11151F),
+                  borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black12,
+                      color: Colors.black54,
                       blurRadius: 8,
                     ),
                   ],
                 ),
 
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
 
                   children: [
 
                     Text(
                       "${ride['from']} → ${ride['to']}",
-
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight:
-                            FontWeight.bold,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
 
@@ -87,12 +90,14 @@ class DriverHistoryScreen extends StatelessWidget {
 
                     Text(
                       "Passenger: ${ride['passengerName']}",
+                      style: TextStyle(color: Colors.white70),
                     ),
 
                     SizedBox(height: 6),
 
                     Text(
                       "Earned: ${ride['price']} ETB",
+                      style: TextStyle(color: Colors.white70),
                     ),
 
                     SizedBox(height: 6),
@@ -100,9 +105,8 @@ class DriverHistoryScreen extends StatelessWidget {
                     Text(
                       "COMPLETED",
                       style: TextStyle(
-                        color: Colors.green,
-                        fontWeight:
-                            FontWeight.bold,
+                        color: Colors.greenAccent,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
