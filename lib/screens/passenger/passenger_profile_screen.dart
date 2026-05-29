@@ -253,7 +253,7 @@ class _PassengerProfileScreenState
 
                     child: Text(
                       "Log Out",
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: const Color.fromARGB(255, 242, 4, 4)),
                     ),
                   ),
                 ),
@@ -261,7 +261,7 @@ class _PassengerProfileScreenState
             ),
           ),
 
-          bottomNavigationBar: BottomNavigationBar(
+          bottomNavigationBar: BottomNavigationBar( 
             backgroundColor: Color(0xFF11151F),
             selectedItemColor: Colors.deepPurple,
             unselectedItemColor: Colors.grey,

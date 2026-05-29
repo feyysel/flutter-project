@@ -22,6 +22,7 @@ class _DriverEarningsScreenState
       backgroundColor: Color(0xFF050816),
 
       appBar: AppBar(
+         automaticallyImplyLeading: false,
         backgroundColor: Color(0xFF11151F),
         elevation: 0,
         title: Text(

@@ -22,6 +22,7 @@ class _PassengerActivityScreenState
       backgroundColor: Color(0xFF050816),
 
       appBar: AppBar(
+          automaticallyImplyLeading: false,
         title: Text("Activity",
             style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF11151F),

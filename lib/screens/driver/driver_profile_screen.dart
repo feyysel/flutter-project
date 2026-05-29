@@ -18,6 +18,9 @@ class _DriverProfileScreenState
       int currentIndex = 3;
 
   Map<String, dynamic>? driverData;
+  int totalTrips = 0;
+double acceptanceRate = 0;
+String yearsDriving = "0";
 
   @override
   void initState() {
@@ -27,19 +30,92 @@ class _DriverProfileScreenState
 
   // ================= LOAD DRIVER DATA =================
   Future<void> loadDriverData() async {
-    final user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) return;
+  final user =
+      FirebaseAuth.instance.currentUser;
 
-    final doc = await FirebaseFirestore.instance
-        .collection("users")
-        .doc(user.uid)
-        .get();
+  if (user == null) return;
 
-    setState(() {
-      driverData = doc.data();
-    });
+  // ================= USER DATA =================
+  final doc = await FirebaseFirestore.instance
+      .collection("users")
+      .doc(user.uid)
+      .get();
+
+  // ================= TOTAL COMPLETED TRIPS =================
+  final completedTrips =
+      await FirebaseFirestore.instance
+          .collection("ride_history")
+          .where(
+            "driverId",
+            isEqualTo: user.uid,
+          )
+          .get();
+
+  // ================= ACCEPTED RIDES =================
+  final acceptedTrips =
+      await FirebaseFirestore.instance
+          .collection("ride_requests")
+          .where(
+            "driverId",
+            isEqualTo: user.uid,
+          )
+          .where(
+            "status",
+            isEqualTo: "accepted",
+          )
+          .get();
+
+  // ================= DECLINED RIDES =================
+  final declinedTrips =
+      await FirebaseFirestore.instance
+          .collection("ride_requests")
+          .where(
+            "driverId",
+            isEqualTo: user.uid,
+          )
+          .where(
+            "status",
+            isEqualTo: "declined",
+          )
+          .get();
+
+  int accepted = acceptedTrips.docs.length;
+  int declined = declinedTrips.docs.length;
+
+  double rate = 0;
+
+  if ((accepted + declined) > 0) {
+
+    rate =
+        (accepted /
+                (accepted + declined)) *
+            100;
   }
+
+  // ================= YEARS DRIVING =================
+  DateTime createdDate =
+      user.metadata.creationTime ??
+          DateTime.now();
+
+  int years =
+      DateTime.now().year -
+          createdDate.year;
+
+  setState(() {
+
+    driverData = doc.data();
+
+    totalTrips =
+        completedTrips.docs.length;
+
+    acceptanceRate = rate;
+
+    yearsDriving = years <= 0
+        ? "1"
+        : years.toString();
+  });
+}
 
   final nameController =
     TextEditingController();
@@ -351,14 +427,20 @@ GestureDetector(
 
   onTap: () {
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) =>
-            DriverVerificationScreen(),
-      ),
-    );
-  },
+  // DO NOTHING IF VERIFIED
+  if (driverData!["verificationStatus"] ==
+      "verified") {
+    return;
+  }
+
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          DriverVerificationScreen(),
+    ),
+  );
+},
 
   child: Container(
     padding: EdgeInsets.symmetric(
@@ -452,7 +534,7 @@ SizedBox(height: 28),
                           Expanded(
                             child: statCard(
                               title: "TOTAL TRIPS",
-                              value: "0",
+                              value: totalTrips.toString(),
                             ),
                           ),
 
@@ -461,7 +543,7 @@ SizedBox(height: 28),
                           Expanded(
                             child: statCard(
                               title: "YEARS DRIVING",
-                              value: "1",
+                              value: yearsDriving,
                             ),
                           ),
                         ],
@@ -498,7 +580,7 @@ SizedBox(height: 28),
                             SizedBox(height: 10),
 
                             Text(
-                              "98%",
+                              "${acceptanceRate.toStringAsFixed(0)}%",
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 36,
@@ -569,17 +651,20 @@ SizedBox(height: 28),
 
                     SizedBox(height: 35),
 
-                    GestureDetector(
-                      onTap: logout,
-                      child: Text(
-                        "Sign Out",
-                        style: TextStyle(
-                          color: Colors.pink,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF11151F),
                     ),
+
+                    onPressed: () {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+
+                    child: Text(
+                      "Log Out",
+                      style: TextStyle(color: const Color.fromARGB(255, 253, 2, 2)),
+                    ),
+                  ),
 
                     SizedBox(height: 35),
                   ],

@@ -16,6 +16,7 @@ class _DriverRidePostScreenState
 
   int currentIndex = 1;
 
+
   final fromController = TextEditingController();
   final toController = TextEditingController();
   final priceController = TextEditingController();
@@ -423,7 +424,9 @@ void showRideDetails(
       backgroundColor: Color(0xFF050816),
 
       appBar: AppBar(
+           automaticallyImplyLeading: false,
         backgroundColor: Color(0xFF050816),
+        foregroundColor: Colors.white,
         elevation: 0,
         title: Text("Post Ride"),
       ),
