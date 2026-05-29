@@ -1,0 +1,203 @@
+1. User Registration Testing
+Test Case 1: Successful User Registration
+Steps:
+Open the Intercity Ride Sharing System.
+Click the Register button.
+Enter a valid full name.
+Enter a valid email address.
+Enter a strong password.
+Select a role (Driver or Passenger).
+Click Submit.
+Expected Result:
+The account is created successfully.
+The user is redirected to the dashboard.
+A success message is displayed.
+Test Case 2: Registration with Invalid Email
+Steps:
+Open the registration form.
+Enter an invalid email format.
+Fill in the remaining required fields.
+Click Submit.
+Expected Result:
+The system displays an email validation error.
+Registration is not completed.
+2. Login and Logout Testing
+Test Case 1: Successful Login
+Steps:
+Open the login page.
+Enter valid email and password.
+Click Login.
+Expected Result:
+User successfully logs into the system.
+Dashboard page opens.
+Test Case 2: Invalid Login
+Steps:
+Open the login page.
+Enter incorrect password.
+Click Login.
+Expected Result:
+Error message appears.
+User remains on login page.
+Test Case 3: Logout
+Steps:
+Login to the system.
+Click Logout.
+Expected Result:
+User session ends successfully.
+Login page is displayed.
+3. Driver Feature Testing
+Test Case 1: Post New Trip
+Steps:
+Login as Driver.
+Navigate to Post Trip section.
+Enter trip details:
+Departure location
+Destination
+Date and time
+Available seats
+Price
+Click Submit.
+Expected Result:
+Trip is posted successfully.
+Trip appears in available trips list.
+Test Case 2: Edit Trip
+Steps:
+Login as Driver.
+Open posted trips.
+Select Edit.
+Modify trip details.
+Save changes.
+Expected Result:
+Updated trip information is saved.
+Test Case 3: Delete Trip
+Steps:
+Login as Driver.
+Open trip management page.
+Select Delete Trip.
+Confirm deletion.
+Expected Result:
+Trip is removed from the system.
+4. Passenger Feature Testing
+Test Case 1: Search for Trips
+Steps:
+Login as Passenger.
+Open search page.
+Enter departure and destination.
+Click Search.
+Expected Result:
+Matching trips are displayed.
+Test Case 2: Filter Trips
+Steps:
+Search for trips.
+Apply filters by:
+Price
+Time
+Location
+Expected Result:
+Filtered trip results appear correctly.
+Test Case 3: View Trip Details
+Steps:
+Select a trip from search results.
+Open trip details page.
+Expected Result:
+Full trip information is displayed.
+5. Booking System Testing
+Test Case 1: Successful Seat Booking
+Steps:
+Login as Passenger.
+Select an available trip.
+Click Book Seat.
+Confirm booking.
+Expected Result:
+Booking is completed successfully.
+Seat count decreases.
+Booking confirmation appears.
+Test Case 2: Booking with No Available Seats
+Steps:
+Select a fully booked trip.
+Attempt to book a seat.
+Expected Result:
+System prevents booking.
+Error message appears.
+6. Payment System Testing
+Test Case 1: Successful Payment
+Steps:
+Select a trip.
+Proceed to payment.
+Enter valid payment information.
+Confirm payment.
+Expected Result:
+Payment is processed successfully.
+Booking confirmation is generated.
+Test Case 2: Failed Payment
+Steps:
+Proceed to payment.
+Enter invalid payment details.
+Confirm payment.
+Expected Result:
+Payment fails.
+Error message appears.
+Booking is not confirmed.
+7. Rating and Review Testing
+Test Case 1: Passenger Rates Driver
+Steps:
+Complete a trip.
+Open rating section.
+Select rating score.
+Write review.
+Submit review.
+Expected Result:
+Rating and review are saved successfully.
+Test Case 2: Duplicate Review Prevention
+Steps:
+Submit a review for a completed trip.
+Attempt to submit another review for the same trip.
+Expected Result:
+System blocks duplicate review submission.
+8. Security Testing
+Test Case 1: SQL Injection Prevention
+Steps:
+Open login form.
+Enter SQL injection code in input fields.
+Submit login request.
+Expected Result:
+Login fails.
+System remains secure.
+Test Case 2: Password Encryption Verification
+Steps:
+Create a new account.
+Verify stored password in database.
+Expected Result:
+Password is encrypted and not stored as plain text.
+9. Performance Testing
+Test Case 1: Multiple User Load Test
+Steps:
+Simulate multiple users accessing the system simultaneously.
+Perform trip searches and bookings.
+Expected Result:
+System responds within acceptable time.
+No crashes occur.
+10. Usability Testing
+Test Case 1: Interface Navigation
+Steps:
+Navigate through all major pages.
+Check menus, buttons, and forms.
+Expected Result:
+Navigation is simple and user-friendly.
+All pages load correctly.
+Conclusion
+
+This QA Test Plan ensures that the Intercity Ride Sharing System is thoroughly tested for functionality, reliability, performance, and security. The testing process helps identify defects early, improve user experience, and ensure the system meets project requirements before deployment.
+
+I added detailed step-by-step QA testing procedures for the project, including test cases, testing steps, and expected results for:
+
+User Registration
+Login & Logout
+Driver Features
+Passenger Features
+Booking System
+Payment System
+Rating & Review System
+Security Testing
+Performance Testing
+Usability Testing
