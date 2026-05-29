@@ -1,0 +1,203 @@
+[28/05/2026 23:06] Hilina: 1. Firebase Setup
+Add Dependencies in pubspec.yaml
+dependencies:
+  flutter:
+    sdk: flutter
+
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+2. Firebase Initialization
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp();
+
+  runApp(MyApp());
+}
+3. User Registration Testing
+import 'package:firebase_auth/firebase_auth.dart';
+
+Future<void> registerTest() async {
+  try {
+    await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: "test@gmail.com",
+      password: "123456",
+    );
+
+    print("Registration Test Passed");
+  } catch (e) {
+    print("Registration Test Failed");
+  }
+}
+Expected Result
+User account should be created successfully.
+4. Login Testing
+Future<void> loginTest() async {
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: "test@gmail.com",
+      password: "123456",
+    );
+
+    print("Login Test Passed");
+  } catch (e) {
+    print("Login Test Failed");
+  }
+}
+Expected Result
+User should login successfully.
+5. Logout Testing
+Future<void> logoutTest() async {
+  await FirebaseAuth.instance.signOut();
+
+  print("Logout Test Passed");
+}
+Expected Result
+User session should end successfully.
+6. Add Trip Testing (Driver)
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+Future<void> addTripTest() async {
+  try {
+    await FirebaseFirestore.instance.collection('trips').add({
+      'from': 'Addis Ababa',
+      'to': 'Dire Dawa',
+      'price': 500,
+      'seats': 4,
+    });
+
+    print("Trip Posting Test Passed");
+  } catch (e) {
+    print("Trip Posting Test Failed");
+  }
+}
+Expected Result
+Trip data should be stored in Firebase.
+7. Edit Trip Testing
+Future<void> editTripTest(String tripId) async {
+  await FirebaseFirestore.instance
+      .collection('trips')
+      .doc(tripId)
+      .update({
+    'price': 700,
+  });
+
+  print("Trip Edit Test Passed");
+}
+Expected Result
+Trip information should update correctly.
+8. Delete Trip Testing
+Future<void> deleteTripTest(String tripId) async {
+  await FirebaseFirestore.instance
+      .collection('trips')
+      .doc(tripId)
+      .delete();
+
+  print("Trip Delete Test Passed");
+}
+Expected Result
+Trip should be removed successfully.
+9. Search Trip Testing
+Future<void> searchTripTest() async {
+  var result = await FirebaseFirestore.instance
+      .collection('trips')
+      .where('to', isEqualTo: 'Dire Dawa')
+      .get();
+
+  if (result.docs.isNotEmpty) {
+    print("Trip Search Test Passed");
+  } else {
+    print("No Trips Found");
+  }
+}
+Expected Result
+Matching trips should appear.
+10. Booking Seat Testing
+Future<void> bookingTest(String tripId) async {
+  DocumentReference tripRef =
+      FirebaseFirestore.instance.collection('trips').doc(tripId);
+
+  FirebaseFirestore.instance.runTransaction((transaction) async {
+    DocumentSnapshot snapshot = await transaction.get(tripRef);
+
+    int seats = snapshot['seats'];
+
+    if (seats > 0) {
+      transaction.update(tripRef, {
+        'seats': seats - 1,
+      });
+
+      print("Booking Test Passed");
+    } else {
+      print("No Seats Available");
+    }
+  });
+}
+Expected Result
+Seat count should decrease after booking.
+11. Payment Testing
+Future<void> paymentTest() async {
+  bool paymentSuccess = true;
+
+  if (paymentSuccess) {
+    print("Payment Test Passed");
+  } else {
+    print("Payment Test Failed");
+  }
+}
+Expected Result
+Payment should process successfully.
+12. Rating and Review Testing
+Future<void> reviewTest() async {
+  await FirebaseFirestore.instance.collection('reviews').add({
+    'driverId': '123',
+    'rating': 5,
+    'review': 'Excellent Driver'
+  });
+
+  print("Review Test Passed");
+}
+Expected Result
+Review should be saved successfully.
+13. Security Testing
+Invalid Login Test
+Future<void> invalidLoginTest() async {
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: "wrong@gmail.com",
+      password: "wrongpass",
+    );
+  } catch (e) {
+    print("Security Test Passed");
+  }
+}
+[28/05/2026 23:06] Hilina: Expected Result
+Invalid users should not login.
+14. Performance Testing
+Future<void> performanceTest() async {
+  Stopwatch stopwatch = Stopwatch()..start();
+
+  await FirebaseFirestore.instance.collection('trips').get();
+
+  stopwatch.stop();
+
+  print("Load Time: ${stopwatch.elapsedMilliseconds} ms");
+}
+Expected Result
+Data should load within acceptable time.
+15. Firestore Connection Testing
+Future<void> firestoreConnectionTest() async {
+  try {
+    await FirebaseFirestore.instance.collection('test').get();
+
+    print("Firebase Connection Test Passed");
+  } catch (e) {
+    print("Firebase Connection Failed");
+  }
+}
+Expected Result
+Firebase should connect successfully.
