@@ -22,7 +22,7 @@ class _DriverRidePostScreenState
   final priceController = TextEditingController();
   final seatsController = TextEditingController();
   final timeController = TextEditingController();
-
+  
   bool isLoading = false;
 
   // ================= POST RIDE =================
@@ -82,9 +82,15 @@ Future<void> postRide() async {
     "seats": seatsController.text,
     "isOnline": true,
     "time": timeController.text,
+    "status": "active", // active | full | completed
 
     "vehicleModel":
         driverData?["vehicleModel"] ?? "Economy",
+        "totalSeats": int.parse(seatsController.text),
+
+"availableSeats": int.parse(seatsController.text),
+
+"seats": seatsController.text,
 
     "createdAt": FieldValue.serverTimestamp(),
   });
