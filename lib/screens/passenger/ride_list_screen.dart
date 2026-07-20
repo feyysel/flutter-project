@@ -253,6 +253,39 @@ class _RideListScreenState extends State<RideListScreen> {
       "createdAt": FieldValue.serverTimestamp(),
     });
 
+    await FirebaseFirestore.instance
+    .collection("posts")
+    .doc(rideId)
+    .update({
+
+  "availableSeats": FieldValue.increment(-1),
+});
+
+final ride =
+    await FirebaseFirestore.instance
+        .collection("posts")
+        .doc(rideId)
+        .get();
+
+final data = ride.data();
+
+if (data != null &&
+    data["availableSeats"] <= 0) {
+
+  await ride.reference.update({
+    "isFull": true,
+  });
+}
+
+await FirebaseFirestore.instance
+    .collection("posts")
+    .doc(rideId)
+    .update({
+
+  "status": "completed",
+
+});
+
     await FirebaseFirestore.instance.collection("notifications").add({
       "userId": driverId,
       "title": "New Ride Request",
@@ -439,14 +472,39 @@ class _RideListScreenState extends State<RideListScreen> {
         ),
       ),
     ),
-                                    ],
-                                  ),
+   ],
+ ),
 
                                   SizedBox(height: 5),
                                   Text(
-                                    "createdAt: ${posts['createdAt']}",
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
+  "Seats: ${posts['availableSeats'] ?? 0}/${posts['totalSeats'] ?? posts['seats'] ?? 0}",
+  style: TextStyle(
+    color: Colors.grey,
+    fontWeight: FontWeight.bold,
+  ),
+),
+
+SizedBox(height: 5),
+
+if ((posts['availableSeats'] ?? 0) == 0)
+Container(
+  padding: EdgeInsets.symmetric(
+    horizontal: 10,
+    vertical: 4,
+  ),
+  decoration: BoxDecoration(
+    color: Colors.red,
+    borderRadius: BorderRadius.circular(10),
+  ),
+  child: Text(
+    "FULL",
+    style: TextStyle(
+      color: Colors.white,
+      fontSize: 10,
+      fontWeight: FontWeight.bold,
+    ),
+  ),
+),
                                 ],
                               ),
                             ),
@@ -462,17 +520,15 @@ class _RideListScreenState extends State<RideListScreen> {
                                 SizedBox(height: 5),
                                 ElevatedButton(
                                   onPressed:
-      ((posts.data() as Map<String, dynamic>)
-                  .containsKey('isOnline')
-              ? posts['isOnline'] == true
-              : false)
-          ? () {
-
-              showRideConfirmation(
-                posts,
-              );
-            }
-          : null,
+((posts.data() as Map<String, dynamic>)
+            .containsKey('isOnline')
+        ? posts['isOnline'] == true
+        : false) &&
+(posts['availableSeats'] ?? 0) > 0
+    ? () {
+        showRideConfirmation(posts);
+      }
+    : null,
                                   child: Text("Book"),
                                 )
                               ],

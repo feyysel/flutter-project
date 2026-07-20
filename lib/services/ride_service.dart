@@ -12,6 +12,7 @@ class RideService {
     required String driverId,
     required String driverName,
     required String vehicleModel,
+    required int seats,
   }) async {
     await _db.collection("posts").add({
       "from": from,
@@ -22,6 +23,10 @@ class RideService {
       "driverName": driverName,
       "vehicleModel": vehicleModel,
       "createdAt": FieldValue.serverTimestamp(),
+      "totalSeats": seats,
+      "availableSeats": seats,
+      "isFull": false,
+      "status": "active",            // active | full | completed
     });
   }
 
@@ -29,6 +34,7 @@ class RideService {
   static Stream<QuerySnapshot> getRides() {
   return _db
       .collection("posts")
+//.where("status", isEqualTo: "active")
       .snapshots();
 }
 }

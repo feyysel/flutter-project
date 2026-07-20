@@ -182,6 +182,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             final result = await AuthService.register(
                               name: nameController.text,
                               email: emailController.text,
+                              phone: phoneController.text,
                               password: passwordController.text,
                               role: widget.role,
                             );

@@ -13,6 +13,7 @@ class AuthService {
   static Future<String> register({
   required String name,
   required String email,
+  required String phone,
   required String password,
   required String role,
    bool isverified=false,
@@ -23,6 +24,7 @@ class AuthService {
     // validation
     if (name.trim().isEmpty ||
         email.trim().isEmpty ||
+        phone.trim().isEmpty ||
         password.trim().isEmpty) {
       return "All fields are required";
     }
@@ -42,6 +44,7 @@ class AuthService {
       "name": name.trim(),
       "email": email.trim(),
       "role": role,
+      "phone": phone.trim(),
       "isverified":isverified,
     });
 
@@ -95,6 +98,7 @@ class AuthService {
       currentUser = UserModel(
         name: user["name"],
         email: user["email"],
+        phone: user["phone"],
         role: user["role"],
         uid: cred.user!.uid,
       );

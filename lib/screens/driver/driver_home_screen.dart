@@ -489,397 +489,217 @@ StreamBuilder<QuerySnapshot>(
       );
     }
 
-    final request =
-        snapshot.data!.docs.first;
+    final requests = snapshot.data!.docs;
 
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.all(16),
-      padding: EdgeInsets.all(25),
+Map<String, List<QueryDocumentSnapshot>> groupedRequests = {};
 
-      decoration: BoxDecoration(
-        color: Color(0xFF050816),
-        borderRadius: BorderRadius.circular(35),
-      ),
+for (var request in requests) {
+  final rideId = request["rideId"];
 
-      child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
+  if (!groupedRequests.containsKey(rideId)) {
+    groupedRequests[rideId] = [];
+  }
 
-        children: [
+  groupedRequests[rideId]!.add(request);
+}
 
-          Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
+    return Expanded(
+  child: ListView(
+    padding: const EdgeInsets.all(16),
+    children: groupedRequests.entries.map((entry) {
+      final rideRequests = entry.value;
 
+      final firstRequest = rideRequests.first;
+
+      return Card(
+        color: const Color(0xFF050816),
+        margin: const EdgeInsets.only(bottom: 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
 
-              Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
-                children: [
-
-                  Text(
-                    request['status'] == "accepted"
-                   ? "Current Ride"
-                   : "New Ride Request",
-
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight:
-                          FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  SizedBox(height: 5),
-
-                 Column(
-  crossAxisAlignment:
-      CrossAxisAlignment.start,
-
-  children: [
-
-    Text(
-      request['status'] == "accepted"
-          ? "Ride in progress"
-          : "Passenger requesting ride",
-
-      style: TextStyle(
-        color: Colors.grey,
-      ),
-    ),
-
-    SizedBox(height: 10),
-
-    Text(
-      "Passenger: ${request['passengerName'] ?? ''}",
-
-      style: TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-
-    SizedBox(height: 5),
-
-    Text(
-      "Phone: ${request['passengerPhone'] ?? ''}",
-
-      style: TextStyle(
-        color: Colors.white70,
-      ),
-    ),
-  ],
-),
-                ],
-              ),
-
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 12,
-                ),
-
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple,
-                  borderRadius:
-                      BorderRadius.circular(20),
-                ),
-
-                child: Text(
-                  "${request.data().toString().contains('price') ? request['price'] : '0'} ETB",
-
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight:
-                        FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          SizedBox(height: 25),
-
-          // PICKUP
-          Text(
-            "PICKUP",
-
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
-              letterSpacing: 2,
-            ),
-          ),
-
-          SizedBox(height: 5),
-
-          Text(
-            request.data().toString().contains('from')
-    ? request['from']
-    : "Unknown Pickup",
-
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          SizedBox(height: 20),
-
-          // DESTINATION
-          Text(
-            "DESTINATION",
-
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 11,
-              letterSpacing: 2,
-            ),
-          ),
-
-          SizedBox(height: 5),
-
-          Text(
-            request.data().toString().contains('to') ? request['to'] : "Unknown Destination",
-
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          SizedBox(height: 25),
-
-          Row(
-            children: [
-
-              if (request['status'] == "pending")
-              Expanded(
-                child: ElevatedButton(
-
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.grey[300],
-
-                    padding:
-                        EdgeInsets.symmetric(
-                      vertical: 18,
-                    ),
-
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        20,
-                      ),
-                    ),
-                  ),
-
-                  onPressed: () async {
-
-                    await FirebaseFirestore
-                        .instance
-                        .collection(
-                            "ride_requests")
-                        .doc(request.id)
-                        .update({
-                      "status": "declined",
-                    });
-                  },
-
-                  child: Text(
-                    "Decline",
-
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
+              Text(
+                "${firstRequest['from']} → ${firstRequest['to']}",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
 
-              SizedBox(width: 15),
+              const SizedBox(height: 10),
 
-             if (request['status'] == "pending")
-              Expanded(
-                child: ElevatedButton(
+              Text(
+                "Passengers (${rideRequests.length})",
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontSize: 16,
+                ),
+              ),
 
-                  style:
-                      ElevatedButton.styleFrom(
-                    backgroundColor:
-                        Colors.deepPurple,
+              const SizedBox(height: 15),
 
-                    padding:
-                        EdgeInsets.symmetric(
-                      vertical: 18,
-                    ),
+              ...rideRequests.map((request) {
 
-                    shape:
-                        RoundedRectangleBorder(
-                      borderRadius:
-                          BorderRadius.circular(
-                        20,
-                      ),
-                    ),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF11151F),
+                    borderRadius: BorderRadius.circular(15),
                   ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
 
-                  onPressed: () async {
-
-                    await FirebaseFirestore
-                        .instance
-                        .collection(
-                            "ride_requests")
-                        .doc(request.id)
-                        .update({
-
-                      "status": "accepted",
-                    });
-
-                    await FirebaseFirestore.instance
-    .collection("notifications")
-    .add({
-
-  "userId": request['passengerId'],
-
-  "title": "Ride Accepted",
-
-  "body":
-      "Driver accepted your ride",
-
-  "createdAt":
-      FieldValue.serverTimestamp(),
-});
-
-                    ScaffoldMessenger.of(
-                            context)
-                        .showSnackBar(
-
-                      SnackBar(
-                        backgroundColor:
-                            Colors.green,
-
-                        content: Text(
-                          "Ride accepted",
+                      Text(
+                        request["passengerName"],
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
                         ),
                       ),
-                    );
-                  },
 
-                  child: Text(
-                    "Accept Trip",
+                      const SizedBox(height: 5),
 
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
+                      Text(
+                        request["passengerPhone"],
+                        style: const TextStyle(
+                          color: Colors.white70,
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      Text(
+                        "${request["price"]} ETB",
+                        style: const TextStyle(
+                          color: Colors.deepPurple,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+
+
+  Column(
+    children: [
+if (request["status"] == "pending")
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.grey,
+          ),
+          onPressed: () async {
+            await FirebaseFirestore.instance
+                .collection("ride_requests")
+                .doc(request.id)
+                .update({
+              "status": "declined",
+            });
+          },
+          child: const Text("Decline"),
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.deepPurple,
+          ),
+          onPressed: () async {
+
+            await FirebaseFirestore.instance
+                .collection("ride_requests")
+                .doc(request.id)
+                .update({
+              "status": "accepted",
+            });
+
+            await FirebaseFirestore.instance
+                .collection("notifications")
+                .add({
+              "userId": request["passengerId"],
+              "title": "Ride Accepted",
+              "body": "Driver accepted your ride",
+              "createdAt": FieldValue.serverTimestamp(),
+            });
+
+          },
+          child: const Text("Accept"),
+        ),
+      ),
+
+    ],
+  ),
+
+if (request["status"] == "accepted")
+  Padding(
+    padding: const EdgeInsets.only(top: 12),
+    child: SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.green,
+        ),
+        onPressed: () async {
+
+          final requestData =
+              request.data() as Map<String, dynamic>;
+
+          // Mark request completed
+          await FirebaseFirestore.instance
+              .collection("ride_requests")
+              .doc(request.id)
+              .update({
+            "status": "completed",
+          });
+
+          // Save history
+          await FirebaseFirestore.instance
+              .collection("ride_history")
+              .add({
+
+            ...requestData,
+
+            "status": "completed",
+
+            "completedAt":
+                FieldValue.serverTimestamp(),
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Ride Completed"),
+            ),
+          );
+        },
+        child: const Text("Complete Ride"),
+      ),
+    ),
+  ),
+
+                    ],
                   ),
-                ),
-              ),
+                );
+
+              }).toList(),
             ],
           ),
-
-          SizedBox(height: 15),
-
-          // COMPLETE BUTTON
-          if (request['status'] == "accepted")
-          SizedBox(
-            width: double.infinity,
-
-            child: ElevatedButton(
-
-              style:
-                  ElevatedButton.styleFrom(
-                backgroundColor:
-                    Colors.green,
-
-                padding:
-                    EdgeInsets.symmetric(
-                  vertical: 18,
-                ),
-
-                shape:
-                    RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(
-                    20,
-                  ),
-                ),
-              ),
-
-              onPressed: () async {
-
-  final requestData = request.data()
-      as Map<String, dynamic>;
-
-  // 1. UPDATE STATUS
-  await FirebaseFirestore.instance
-      .collection("ride_requests")
-      .doc(request.id)
-      .update({
-    "status": "completed",
-  });
-
-  await FirebaseFirestore.instance
-    .collection("notifications")
-    .add({
-
-  "userId": request['passengerId'],
-
-  "title": "Ride Accepted",
-
-  "body":
-      "Driver accepted your ride",
-
-  "createdAt":
-      FieldValue.serverTimestamp(),
-});
-
-  // 2. SAVE TO HISTORY
-  await FirebaseFirestore.instance
-      .collection("ride_history")
-      .add({
-
-    ...requestData,
-
-    "status": "completed",
-
-    "completedAt":
-        FieldValue.serverTimestamp(),
-  });
-
-  ScaffoldMessenger.of(context)
-      .showSnackBar(
-
-    SnackBar(
-      backgroundColor: Colors.green,
-      content: Text("Ride completed"),
-    ),
-  );
-},
-
-              child: Text(
-                "Complete Ride",
-
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight:
-                      FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+        ),
+      );
+    }).toList(),
+  ),
+);
   },
 ),
                 // ================= BOTTOM NAV =================
