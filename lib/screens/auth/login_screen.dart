@@ -6,9 +6,8 @@ import '../driver/driver_home_screen.dart';
 import '../../models/user_model.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import '../../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   final String role;
@@ -23,69 +22,159 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  final _formKey = GlobalKey<FormState>(); //  added
+  final _formKey = GlobalKey<FormState>();
 
   bool isPasswordHidden = true;
+  bool isLoading = false;
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendResetLink() async {
+    if (emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text("Enter your email first"),
+        ),
+      );
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance
+          .sendPasswordResetEmail(email: emailController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.success,
+          content: Text("Password reset email sent"),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text(e.toString()),
+        ),
+      );
+    }
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => isLoading = true);
+
+    final result = await AuthService.login(
+      email: emailController.text,
+      password: passwordController.text,
+      role: widget.role,
+    );
+
+    setState(() => isLoading = false);
+
+    if (result is UserModel) {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null) {
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(result.uid)
+            .update({"notificationToken": token});
+      }
+
+      if (result.role == "passenger") {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => PassengerHomeScreen()),
+        );
+      } else {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => DriverHomeScreen()),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.danger,
+          content: Text(
+            result,
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-
-              SizedBox(height: 10),
-
-              Text(
-                "Welcome Back",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              SizedBox(height: 8),
-
-              Text(
-                widget.role == "driver"
-                    ? "Login to manage your rides and passengers"
-                    : "Login to find and book rides between cities",
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-
-              SizedBox(height: 30),
-
-              //  FORM ADDED
-              Form(
-                key: _formKey,
-                child: Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(16),
+      body: PremiumBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Material(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(14),
+                      onTap: () => Navigator.pop(context),
+                      child: const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Icon(Icons.close, color: AppColors.textSecondary),
+                      ),
+                    ),
                   ),
+                ),
+
+                const SizedBox(height: 18),
+
+                const Text(
+                  "Welcome Back",
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: -1,
+                    color: Colors.white,
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  widget.role == "driver"
+                      ? "Login to manage your rides and passengers"
+                      : "Login to find and book rides between cities",
+                  style: const TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+
+                const SizedBox(height: 34),
+
+                Form(
+                  key: _formKey,
                   child: Column(
                     children: [
-                      // Email
                       TextFormField(
                         controller: emailController,
-                        decoration: InputDecoration(
+                        style: const TextStyle(color: Colors.white),
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: const InputDecoration(
                           labelText: "Email",
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
+                          labelStyle: TextStyle(color: AppColors.textMuted),
+                          prefixIcon: Icon(Icons.mail_outline),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
@@ -95,29 +184,28 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 18),
 
-                      // Password
                       TextFormField(
                         controller: passwordController,
                         obscureText: isPasswordHidden,
+                        style: const TextStyle(color: Colors.white),
                         decoration: InputDecoration(
                           labelText: "Password",
-                          prefixIcon: Icon(Icons.lock),
+                          labelStyle:
+                              const TextStyle(color: AppColors.textMuted),
+                          prefixIcon: const Icon(Icons.lock_outline),
                           suffixIcon: IconButton(
                             icon: Icon(
                               isPasswordHidden
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: AppColors.textMuted,
                             ),
                             onPressed: () {
-                              setState(() {
-                                isPasswordHidden = !isPasswordHidden;
-                              });
+                              setState(
+                                  () => isPasswordHidden = !isPasswordHidden);
                             },
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
                           ),
                         ),
                         validator: (value) {
@@ -128,199 +216,82 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
 
-                      SizedBox(height: 10),
-
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-
-  onPressed: () async {
-
-    if (emailController.text.trim().isEmpty) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            "Enter your email first",
-          ),
-        ),
-      );
-
-      return;
-    }
-
-    try {
-
-      await FirebaseAuth.instance
-          .sendPasswordResetEmail(
-
-        email: emailController.text.trim(),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-
-        SnackBar(
-          backgroundColor: Colors.green,
-          content: Text(
-            "Password reset email sent",
-          ),
-        ),
-      );
-
-    } catch (e) {
-
-      ScaffoldMessenger.of(context).showSnackBar(
-
-        SnackBar(
-          backgroundColor: Colors.red,
-          content: Text(
-            e.toString(),
-          ),
-        ),
-      );
-    }
-  },
-
-  child: Text("Forgot Password?"),
-),
-                      ),
-
-                      SizedBox(height: 10),
-
-                      // Login Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                          onPressed: _sendResetLink,
+                          child: const Text(
+                            "Forgot Password?",
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          onPressed: () async {
-                            //  VALIDATION FIRST
-                            if (_formKey.currentState!.validate()) {
-                              final result = await AuthService.login(
-                                email: emailController.text,
-                                password: passwordController.text,
-                                role: widget.role,
-                              );
-      // SUCCESS
-if (result is UserModel) {
-
-  // ================= SAVE FCM TOKEN =================
-final token =
-    await FirebaseMessaging.instance.getToken();
-
-if (token != null) {
-
-  await FirebaseFirestore.instance
-      .collection("users")
-      .doc(result.uid)
-      .update({
-
-    "notificationToken": token,
-  });
-}
-
-  // ================= NAVIGATION =================
-  if (result.role == "passenger") {
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => PassengerHomeScreen(),
-      ),
-    );
-
-  } else {
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => DriverHomeScreen(),
-      ),
-    );
-  }
-}
-                              //  ERROR MESSAGE
-                              else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    backgroundColor: Colors.red,
-                                    content: Text(
-                                      result,
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                );
-                              }
-                            }
-                          },
-                          child: Text(
-                            "Login",
-                            style: TextStyle(fontSize: 16),
-                          ),
                         ),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      PremiumButton(
+                        label: "Login",
+                        loading: isLoading,
+                        onPressed: isLoading ? null : _login,
                       ),
                     ],
                   ),
                 ),
-              ),
 
-              SizedBox(height: 30),
+                const SizedBox(height: 28),
 
-              Center(child: Text("OR")),
-
-              SizedBox(height: 20),
-
-             /* Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      child: Text("Google"),
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {},
-                      child: Text("Apple"),
-                    ),
-                  ),
-                ],
-              ),*/
-
-              SizedBox(height: 30),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text("Don't have an account? "),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => RegisterScreen(role: widget.role),
+                const Row(
+                  children: [
+                    Expanded(child: Divider(color: AppColors.border)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        "OR",
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w600,
                         ),
-                      );
-                    },
-                    child: Text(
-                      "Sign Up",
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    Expanded(child: Divider(color: AppColors.border)),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Don't have an account? ",
+                      style: TextStyle(color: AppColors.textSecondary),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => RegisterScreen(role: widget.role),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Sign Up",
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

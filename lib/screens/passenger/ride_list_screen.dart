@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/ride_service.dart';
+import '../../theme/app_theme.dart';
 
 class RideListScreen extends StatefulWidget {
   const RideListScreen({super.key});
@@ -24,13 +25,14 @@ class _RideListScreenState extends State<RideListScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Container(
-          height: 500,
+          height: 520,
           decoration: BoxDecoration(
             color: Color(0xFF11151F),
             borderRadius: BorderRadius.only(
               topLeft: Radius.circular(35),
               topRight: Radius.circular(35),
             ),
+            border: Border(top: BorderSide(color: AppColors.border)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -49,14 +51,7 @@ class _RideListScreenState extends State<RideListScreen> {
                 ),
                 SizedBox(height: 30),
 
-                Text(
-                  "PICKUP",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    letterSpacing: 2,
-                    fontSize: 11,
-                  ),
-                ),
+                MicroLabel("Pickup", color: AppColors.textMuted),
                 SizedBox(height: 8),
 
                 Text(
@@ -70,15 +65,7 @@ class _RideListScreenState extends State<RideListScreen> {
 
                 SizedBox(height: 25),
 
-                Text(
-                  "DESTINATION",
-                  style: TextStyle(
-                    color: Colors.grey,
-                    letterSpacing: 2,
-                    fontSize: 11,
-                  ),
-                ),
-
+                MicroLabel("Destination", color: AppColors.textMuted),
                 SizedBox(height: 8),
 
                 Text(
@@ -97,13 +84,14 @@ class _RideListScreenState extends State<RideListScreen> {
                   decoration: BoxDecoration(
                     color: Color(0xFF1A1F2E),
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: Color(0xFF11151F),
+                          gradient: AppGradients.primary,
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(
@@ -139,7 +127,7 @@ class _RideListScreenState extends State<RideListScreen> {
                           Text(
                             "${posts['price']} ETB",
                             style: TextStyle(
-                              color: Colors.deepPurple,
+                              color: AppColors.primary,
                               fontSize: 26,
                               fontWeight: FontWeight.bold,
                             ),
@@ -181,12 +169,12 @@ class _RideListScreenState extends State<RideListScreen> {
 
                 SizedBox(
                   width: double.infinity,
-                  height: 65,
+                  height: 60,
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepPurple,
+                      backgroundColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(22),
+                        borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                     onPressed: () async {
@@ -315,11 +303,13 @@ await FirebaseFirestore.instance
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          CircleAvatar(
-            backgroundColor: Colors.grey[800],
-            child: Icon(Icons.person, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: CircleAvatar(
+              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+              child: Icon(Icons.person, color: AppColors.primary),
+            ),
           ),
-          SizedBox(width: 10)
         ],
       ),
 
@@ -330,8 +320,9 @@ await FirebaseFirestore.instance
             Container(
               padding: EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(
-                color: Color(0xFF1A1F2E),
+                gradient: AppGradients.surface,
                 borderRadius: BorderRadius.circular(30),
+                border: Border.all(color: AppColors.border),
               ),
               child: TextField(
                 controller: searchController,
@@ -345,7 +336,7 @@ await FirebaseFirestore.instance
                   hintText: "Search destination...",
                   hintStyle: TextStyle(color: Colors.grey),
                   border: InputBorder.none,
-                  icon: Icon(Icons.location_on, color: Colors.purple),
+                  icon: Icon(Icons.location_on, color: AppColors.primary),
                   suffixIcon: IconButton(
                     icon: Icon(Icons.close, color: Colors.white),
                     onPressed: () {
@@ -405,14 +396,15 @@ await FirebaseFirestore.instance
                         margin: EdgeInsets.only(bottom: 15),
                         padding: EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: Color(0xFF11151F),
-                          borderRadius: BorderRadius.circular(16),
+                          color: AppColors.surface.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: Colors.grey[800],
-                              child: Icon(Icons.person, color: Colors.white),
+                              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+                              child: Icon(Icons.person, color: AppColors.primary),
                             ),
                             SizedBox(width: 10),
                             Expanded(
@@ -509,17 +501,28 @@ Container(
                               ),
                             ),
                             Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
                                   "${posts['price']} ETB",
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: AppColors.gold,
+                                    fontSize: 16,
                                   ),
                                 ),
                                 SizedBox(height: 5),
-                                ElevatedButton(
-                                  onPressed:
+                                SizedBox(
+                                  width: 92,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      padding: EdgeInsets.symmetric(vertical: 10),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    onPressed:
 ((posts.data() as Map<String, dynamic>)
             .containsKey('isOnline')
         ? posts['isOnline'] == true
@@ -529,7 +532,8 @@ Container(
         showRideConfirmation(posts);
       }
     : null,
-                                  child: Text("Book"),
+                                    child: Text("Book"),
+                                  ),
                                 )
                               ],
                             )

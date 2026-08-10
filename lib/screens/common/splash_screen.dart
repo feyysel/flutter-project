@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'role_selection.dart';
+import '../../theme/app_theme.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -8,11 +9,34 @@ class SplashScreen extends StatefulWidget {
   _SplashScreenState createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(seconds: 2), () {
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+
+    _scale = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOutBack,
+    );
+
+    _fade = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeOut,
+    );
+
+    _controller.forward();
+
+    Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => RoleSelectionScreen()),
@@ -21,12 +45,72 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Text(
-          "Ride Sharing App",
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+      body: PremiumBackground(
+        child: SafeArea(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ScaleTransition(
+                  scale: _scale,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      gradient: AppGradients.primary,
+                      borderRadius: BorderRadius.circular(36),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.45),
+                          blurRadius: 40,
+                          offset: const Offset(0, 16),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.local_taxi,
+                      color: Colors.white,
+                      size: 56,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 34),
+                FadeTransition(
+                  opacity: _fade,
+                  child: const Text(
+                    "DriveOn",
+                    style: TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -1,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FadeTransition(
+                  opacity: _fade,
+                  child: const Text(
+                    "INTERCITY RIDE SHARING",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 4,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

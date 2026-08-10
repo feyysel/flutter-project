@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -6,6 +7,8 @@ import 'driver_ride_post_screen.dart';
 import 'driver_earnings_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../theme/app_theme.dart';
+import '../../services/location_service.dart';
 
 class DriverHomeScreen extends StatefulWidget {
   @override
@@ -15,6 +18,48 @@ class DriverHomeScreen extends StatefulWidget {
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool isOnline = true;
   int currentIndex=0;
+
+  final MapController mapController = MapController();
+  LatLng currentLocation = const LatLng(9.5931, 41.8661);
+  bool _mapReady = false;
+
+  Timer? _locationTimer;
+
+  Future<void> _persistLocation(LatLng position) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection("users")
+        .doc(user.uid)
+        .update({
+      "lat": position.latitude,
+      "lng": position.longitude,
+    });
+  }
+
+  Future<void> _initLocation() async {
+    final position = await LocationService.getCurrentPosition();
+    if (!mounted) return;
+
+    if (position != null) {
+      setState(() {
+        currentLocation = position;
+      });
+      if (_mapReady) {
+        mapController.move(position, 15);
+      }
+      if (isOnline) {
+        await _persistLocation(position);
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: AppColors.warning,
+          content: Text("Couldn't access GPS — showing default area"),
+        ),
+      );
+    }
+  }
 
   Stream<Map<String, dynamic>> getDriverStats() async* {
 
@@ -57,6 +102,31 @@ void initState() {
   super.initState();
 
   listenNotifications();
+  _initLocation();
+  if (isOnline) {
+    _startLocationUpdates();
+  }
+}
+
+void _startLocationUpdates() {
+  _stopLocationUpdates();
+  _locationTimer = Timer.periodic(const Duration(seconds: 20), (_) async {
+    if (!isOnline) return;
+    final position = await LocationService.getCurrentPosition();
+    if (position == null) return;
+    await _persistLocation(position);
+  });
+}
+
+void _stopLocationUpdates() {
+  _locationTimer?.cancel();
+  _locationTimer = null;
+}
+
+@override
+void dispose() {
+  _stopLocationUpdates();
+  super.dispose();
 }
 
 void listenNotifications() {
@@ -133,28 +203,44 @@ Future<void> resetDriverEarnings() async {
       body: Stack(
         children: [
 
-          // ================= FAKE MAP (NETWORK IMAGE) =================
-Container(
-  width: double.infinity,
-  height: double.infinity,
-  decoration: BoxDecoration(
-    image: DecorationImage(
-      image: NetworkImage(
-        "https://i1-e.pinimg.com/1200x/9e/1e/7c/9e1e7c7983352dc78b81a3dd53fc4013.jpg",
-      ),
-      fit: BoxFit.cover,
-      colorFilter: ColorFilter.mode(
-        Colors.blue.shade900.withOpacity(0.65),
-        BlendMode.darken,
+          // ================= REAL MAP =================
+Positioned.fill(
+  child: FlutterMap(
+    mapController: mapController,
+    options: MapOptions(
+      initialCenter: currentLocation,
+      initialZoom: 14,
+      backgroundColor: AppColors.background,
+      onMapReady: () {
+        _mapReady = true;
+        mapController.move(currentLocation, 15);
+      },
+      interactionOptions: const InteractionOptions(
+        flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
       ),
     ),
-  ),
-  child: Center(
-    child: Icon(
-      Icons.location_pin,
-      color: Colors.deepPurple,
-      size: 45,
-    ),
+    children: [
+      TileLayer(
+        urlTemplate: 'https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        userAgentPackageName: 'com.example.ride_app',
+      ),
+      MarkerLayer(
+        markers: [
+          Marker(
+            point: currentLocation,
+            width: 54,
+            height: 54,
+            child: const MapMarker(icon: Icons.directions_car),
+          ),
+        ],
+      ),
+      const RichAttributionWidget(
+        showFlutterMapAttribution: false,
+        attributions: [
+          TextSourceAttribution('OpenStreetMap contributors'),
+        ],
+      ),
+    ],
   ),
 ),
 
@@ -247,12 +333,21 @@ Container(
   final user =
       FirebaseAuth.instance.currentUser;
 
-  // UPDATE USER STATUS
+  // GET DRIVER LOCATION WHEN GOING ONLINE
+  LatLng? position;
+  if (newStatus) {
+    position =
+        await LocationService.getCurrentPosition();
+  }
+
+  // UPDATE USER STATUS + LOCATION
   await FirebaseFirestore.instance
       .collection("users")
       .doc(user!.uid)
       .update({
     "isOnline": newStatus,
+    if (position != null) "lat": position.latitude,
+    if (position != null) "lng": position.longitude,
   });
 
   // UPDATE ALL DRIVER POSTS
@@ -270,7 +365,16 @@ Container(
         .doc(doc.id)
         .update({
       "isOnline": newStatus,
+      if (position != null) "lat": position.latitude,
+      if (position != null) "lng": position.longitude,
     });
+  }
+
+  // KEEP LOCATION FRESH WHILE ONLINE
+  if (newStatus) {
+    _startLocationUpdates();
+  } else {
+    _stopLocationUpdates();
   }
 },
                         child: Container(
