@@ -1,107 +1,108 @@
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
-
 
 class AuthService {
   static UserModel? currentUser;
 
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final FirebaseFirestore _db = FirebaseFirestore.instance;
+  static final SupabaseClient _client = Supabase.instance.client;
 
-  // ================= REGISTER =================
-  static Future<String> register({
-  required String name,
-  required String email,
-  required String phone,
-  required String password,
-  required String role,
-   bool isverified=false,
-}) async {
-  await Future.delayed(Duration(seconds: 1));
+  static String? get currentUserId => _client.auth.currentUser?.id;
 
-  try {
-    // validation
-    if (name.trim().isEmpty ||
-        email.trim().isEmpty ||
-        phone.trim().isEmpty ||
-        password.trim().isEmpty) {
-      return "All fields are required";
-    }
-
-    if (password.length < 8) {
-      return "Password must be at least 8 characters";
-    }
-
-    // create firebase user
-    final cred = await _auth.createUserWithEmailAndPassword(
-      email: email.trim(),
-      password: password,
-    );
-
-    // save to firestore
-    await _db.collection("users").doc(cred.user!.uid).set({
-      "name": name.trim(),
-      "email": email.trim(),
-      "role": role,
-      "phone": phone.trim(),
-      "isverified":isverified,
-    });
-
-    return "success";
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'email-already-in-use') {
-      return "User already exists";
-    }
-
-    return e.message ?? "Registration failed";
-  } catch (e) {
-    return e.toString();
+  static String _phoneToEmail(String phone) {
+    final cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
+    return '$cleaned@driveon.local';
   }
-}
 
-  // ================= LOGIN =================
-  static Future<dynamic> login({
-    required String email,
+  static Future<String> register({
+    required String name,
+    required String phone,
     required String password,
     required String role,
   }) async {
-    await Future.delayed(Duration(seconds: 1));
-
     try {
-      // 1. empty validation
-      if (email.trim().isEmpty || password.trim().isEmpty) {
+      if (name.trim().isEmpty ||
+          phone.trim().isEmpty ||
+          password.trim().isEmpty) {
         return "All fields are required";
       }
 
-      // 2. sign in with Firebase
-      final cred = await _auth.signInWithEmailAndPassword(
-        email: email.trim(),
+      if (password.length < 8) {
+        return "Password must be at least 8 characters";
+      }
+
+      final email = _phoneToEmail(phone.trim());
+
+      final response = await _client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'name': name.trim(),
+          'phone': phone.trim(),
+        },
+      );
+
+      if (response.user == null) {
+        return "Registration failed";
+      }
+
+      // The database trigger auto-creates the profile row.
+      // Update it to set role and other fields the trigger doesn't handle.
+      await _client.from('profiles').update({
+        'name': name.trim(),
+        'phone': phone.trim(),
+        'role': role,
+        'is_verified': false,
+        'verification_status': 'none',
+        'is_online': false,
+      }).eq('id', response.user!.id);
+
+      return "success";
+    } on AuthException catch (e) {
+      if (e.message.toLowerCase().contains('already')) {
+        return "User already exists";
+      }
+      return e.message;
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  static Future<dynamic> login({
+    required String phone,
+    required String password,
+    required String role,
+  }) async {
+    try {
+      if (phone.trim().isEmpty || password.trim().isEmpty) {
+        return "All fields are required";
+      }
+
+      final email = _phoneToEmail(phone.trim());
+
+      final response = await _client.auth.signInWithPassword(
+        email: email,
         password: password,
       );
 
-      // 3. get user from Firestore
-      final doc = await _db.collection("users").doc(cred.user!.uid).get();
+      if (response.user == null) {
+        return "Login failed";
+      }
 
-      if (!doc.exists) {
+      final doc = await _client
+          .from('profiles')
+          .select()
+          .eq('id', response.user!.id)
+          .maybeSingle();
+
+      if (doc == null) {
         return "User not found";
       }
 
-      final user = doc.data()!;
-
-      // 4. wrong role
-      if (user["role"] != role) {
+      if (doc['role'] != role) {
         return "Invalid role selected";
       }
 
-      // 5. success
-      currentUser = UserModel(
-        name: user["name"],
-        email: user["email"],
-        phone: user["phone"],
-        role: user["role"],
-        uid: cred.user!.uid,
-      );
+      currentUser = UserModel.fromMap(doc);
 
       return currentUser;
     } catch (e) {
@@ -109,9 +110,16 @@ class AuthService {
     }
   }
 
-  // ================= LOGOUT =================
   static Future<void> logout() async {
-    await _auth.signOut();
+    await _client.auth.signOut();
     currentUser = null;
+  }
+
+  static Future<Map<String, dynamic>?> getUserProfile(String uid) async {
+    return await _client.from('profiles').select().eq('id', uid).maybeSingle();
+  }
+
+  static Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+    await _client.from('profiles').update(data).eq('id', uid);
   }
 }

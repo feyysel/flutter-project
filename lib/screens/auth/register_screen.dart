@@ -14,7 +14,6 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
@@ -26,7 +25,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     nameController.dispose();
-    emailController.dispose();
     phoneController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -39,15 +37,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     final result = await AuthService.register(
       name: nameController.text,
-      email: emailController.text,
       phone: phoneController.text,
       password: passwordController.text,
       role: widget.role,
     );
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
     if (result == "success") {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: AppColors.success,
@@ -56,6 +55,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       Navigator.pop(context);
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.danger,
@@ -136,25 +136,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
                             return "Full name is required";
-                          }
-                          return null;
-                        },
-                      ),
-
-                      const SizedBox(height: 18),
-
-                      TextFormField(
-                        controller: emailController,
-                        style: const TextStyle(color: Colors.white),
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
-                          labelText: "Email",
-                          labelStyle: TextStyle(color: AppColors.textMuted),
-                          prefixIcon: Icon(Icons.mail_outline),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return "Email is required";
                           }
                           return null;
                         },

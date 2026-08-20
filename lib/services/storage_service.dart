@@ -1,14 +1,27 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class StorageService {
-  static final _storage = FirebaseStorage.instance;
+  static final SupabaseClient _client = Supabase.instance.client;
 
-  static Future<String> uploadDriverDocument(File file, String userId) async {
-    final ref = _storage.ref().child("driver_docs/$userId.jpg");
+  static Future<String> uploadDriverDocument(File file, String userId, {String? fileName}) async {
+    final name = fileName ?? 'doc_${DateTime.now().millisecondsSinceEpoch}';
+    final path = 'driver_docs/$userId/$name';
 
-    await ref.putFile(file);
+    await _client.storage.from('driver-docs').upload(path, file);
 
-    return await ref.getDownloadURL();
+    final url = _client.storage.from('driver-docs').getPublicUrl(path);
+
+    return url;
+  }
+
+  static Future<String> uploadProfileImage(File file, String userId) async {
+    final path = 'profiles/$userId/avatar_${DateTime.now().millisecondsSinceEpoch}';
+
+    await _client.storage.from('profile-images').upload(path, file);
+
+    final url = _client.storage.from('profile-images').getPublicUrl(path);
+
+    return url;
   }
 }

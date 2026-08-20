@@ -1,122 +1,85 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'passenger_activity_screen.dart';
 import 'passenger_history_screen.dart';
 import 'passenger_home_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class PassengerProfileScreen extends StatefulWidget {
   const PassengerProfileScreen({super.key});
 
   @override
-  State<PassengerProfileScreen> createState() =>
-      _PassengerProfileScreenState();
+  State<PassengerProfileScreen> createState() => _PassengerProfileScreenState();
 }
 
-class _PassengerProfileScreenState
-    extends State<PassengerProfileScreen> {
-
+class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
   final imageController = TextEditingController();
+  final _supabase = Supabase.instance.client;
+
+  String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
   void showEditProfileDialog(dynamic userData) {
-
     nameController.text = userData?["name"] ?? "";
     phoneController.text = userData?["phone"] ?? "";
-    imageController.text = userData?["profileImage"] ?? "";
+    imageController.text = userData?["profile_image"] ?? "";
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: Color(0xFF11151F), // DARK
-
-          title: Text(
-            "Edit Profile",
-            style: TextStyle(color: Colors.white),
-          ),
-
+          backgroundColor: const Color(0xFF11151F),
+          title: const Text("Edit Profile", style: TextStyle(color: Colors.white)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-
                 TextField(
                   controller: nameController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: "Name",
-                    labelStyle: TextStyle(color: Colors.grey),
-                  ),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                      labelText: "Name", labelStyle: TextStyle(color: Colors.grey)),
                 ),
-
-                SizedBox(height: 15),
-
+                const SizedBox(height: 15),
                 TextField(
                   controller: phoneController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: "Phone",
-                    labelStyle: TextStyle(color: Colors.grey),
-                  ),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                      labelText: "Phone", labelStyle: TextStyle(color: Colors.grey)),
                 ),
-
-                SizedBox(height: 15),
-
+                const SizedBox(height: 15),
                 TextField(
                   controller: imageController,
-                  style: TextStyle(color: Colors.white),
-                  decoration: InputDecoration(
-                    labelText: "Profile Image URL",
-                    labelStyle: TextStyle(color: Colors.grey),
-                  ),
+                  style: const TextStyle(color: Colors.white),
+                  decoration: const InputDecoration(
+                      labelText: "Profile Image URL",
+                      labelStyle: TextStyle(color: Colors.grey)),
                 ),
               ],
             ),
           ),
-
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text("Cancel",
-                  style: TextStyle(color: Colors.grey)),
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
             ),
-
             ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepPurple,
-              ),
-
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
               onPressed: () async {
-
-                final user = FirebaseAuth.instance.currentUser;
-
-                await FirebaseFirestore.instance
-                    .collection("users")
-                    .doc(user!.uid)
-                    .update({
-                  "name": nameController.text,
-                  "phone": phoneController.text,
-                  "profileImage": imageController.text,
-                });
+                await _supabase.from('profiles').update({
+                  'name': nameController.text,
+                  'phone': phoneController.text,
+                  'profile_image': imageController.text,
+                }).eq('id', _currentUserId);
 
                 Navigator.pop(context);
-
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    backgroundColor: Colors.green,
-                    content: Text("Profile updated"),
-                  ),
+                  const SnackBar(
+                      backgroundColor: Colors.green, content: Text("Profile updated")),
                 );
-
                 setState(() {});
               },
-
-              child: Text("Save"),
+              child: const Text("Save"),
             ),
           ],
         );
@@ -126,174 +89,122 @@ class _PassengerProfileScreenState
 
   @override
   Widget build(BuildContext context) {
-
-    final firebaseUser = FirebaseAuth.instance.currentUser;
     int currentIndex = 2;
 
-    return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance
-          .collection("users")
-          .doc(firebaseUser?.uid)
-          .get(),
-
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: _supabase
+          .from('profiles')
+          .select()
+          .eq('id', _currentUserId)
+          .maybeSingle(),
       builder: (context, snapshot) {
-
-        Map<String, dynamic>? user;
-
-        if (snapshot.hasData &&
-            snapshot.data!.data() != null) {
-          user = snapshot.data!.data() as Map<String, dynamic>;
-        }
+        Map<String, dynamic>? user = snapshot.data;
 
         return Scaffold(
-          backgroundColor: Color(0xFF050816), // DARK
-
+          backgroundColor: const Color(0xFF050816),
           appBar: AppBar(
-            backgroundColor: Color(0xFF11151F),
+            backgroundColor: const Color(0xFF11151F),
             elevation: 0,
-            title: Text(
-              "Profile",
-              style: TextStyle(color: Colors.white),
-            ),
-
+            title: const Text("Profile", style: TextStyle(color: Colors.white)),
             actions: [
               IconButton(
-                icon: Icon(Icons.edit, color: Colors.deepPurple),
-                onPressed: () {
-                  showEditProfileDialog(user);
-                },
+                icon: const Icon(Icons.edit, color: Colors.deepPurple),
+                onPressed: () => showEditProfileDialog(user),
               ),
             ],
           ),
-
           body: SingleChildScrollView(
-            padding: EdgeInsets.all(20),
-
+            padding: const EdgeInsets.all(20),
             child: Column(
               children: [
-
                 CircleAvatar(
                   radius: 40,
                   backgroundImage: user != null &&
-                          user["profileImage"] != null &&
-                          user["profileImage"] != ""
-                      ? NetworkImage(user["profileImage"])
+                          user["profile_image"] != null &&
+                          user["profile_image"] != ""
+                      ? NetworkImage(user["profile_image"])
                       : null,
                   child: user == null ||
-                          user["profileImage"] == null ||
-                          user["profileImage"] == ""
-                      ? Icon(Icons.person, size: 40, color: Colors.white)
+                          user["profile_image"] == null ||
+                          user["profile_image"] == ""
+                      ? const Icon(Icons.person, size: 40, color: Colors.white)
                       : null,
-                  backgroundColor: Color(0xFF11151F),
+                  backgroundColor: const Color(0xFF11151F),
                 ),
-
-                SizedBox(height: 15),
-
-                Text(
-                  user?["name"] ?? "Guest",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-
-                SizedBox(height: 8),
-
+                const SizedBox(height: 15),
+                Text(user?["name"] ?? "Guest",
+                    style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+                const SizedBox(height: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                   decoration: BoxDecoration(
                     color: Colors.deepPurple.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Text(
-                    "PASSENGER",
-                    style: TextStyle(color: Colors.deepPurple),
-                  ),
+                  child: const Text("PASSENGER",
+                      style: TextStyle(color: Colors.deepPurple)),
                 ),
-
-                SizedBox(height: 25),
-
-                Row(
+                const SizedBox(height: 25),
+                const Row(
                   children: [
-                    _statCard("Total Trips", "12"),
+                    _StatCard("Total Trips", "12"),
                     SizedBox(width: 15),
-                    _statCard("Rewards", "1.2k"),
+                    _StatCard("Rewards", "1.2k"),
                   ],
                 ),
-
-                SizedBox(height: 25),
-
-                _menuItem(Icons.history, "Trip History",
-                    onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => PassengerHistoryScreen()),
-                  );
+                const SizedBox(height: 25),
+                _MenuItem(Icons.history, "Trip History", onTap: () {
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (_) => PassengerHistoryScreen()));
                 }),
-
-                _menuItem(Icons.local_offer, "Promotions"),
-                _menuItem(Icons.settings, "Settings"),
-
-                SizedBox(height: 30),
-
+                const _MenuItem(Icons.local_offer, "Promotions"),
+                const _MenuItem(Icons.settings, "Settings"),
+                const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF11151F),
-                    ),
-
-                    onPressed: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                        backgroundColor: const Color(0xFF11151F)),
+                    onPressed: () async {
+                      await _supabase.auth.signOut();
+                      if (mounted) {
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      }
                     },
-
-                    child: Text(
-                      "Log Out",
-                      style: TextStyle(color: const Color.fromARGB(255, 242, 4, 4)),
-                    ),
+                    child: const Text("Log Out",
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 242, 4, 4))),
                   ),
                 ),
               ],
             ),
           ),
-
-          bottomNavigationBar: BottomNavigationBar( 
-            backgroundColor: Color(0xFF11151F),
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: const Color(0xFF11151F),
             selectedItemColor: Colors.deepPurple,
             unselectedItemColor: Colors.grey,
             type: BottomNavigationBarType.fixed,
             currentIndex: currentIndex,
-
             onTap: (index) {
-              setState(() {
-                currentIndex = index;
-              });
-
+              setState(() => currentIndex = index);
               if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => PassengerHomeScreen()),
-                );
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => PassengerHomeScreen()));
               } else if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => PassengerActivityScreen()),
-                );
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => PassengerActivityScreen()));
               } else if (index == 2) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (_) => PassengerProfileScreen()),
-                );
+                Navigator.pushReplacement(context,
+                    MaterialPageRoute(builder: (_) => PassengerProfileScreen()));
               }
             },
-
             items: const [
-              BottomNavigationBarItem(
-                  icon: Icon(Icons.home), label: "Home"),
+              BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
               BottomNavigationBarItem(
                   icon: Icon(Icons.receipt_long), label: "Activity"),
               BottomNavigationBarItem(
@@ -304,59 +215,67 @@ class _PassengerProfileScreenState
       },
     );
   }
+}
 
-  Widget _statCard(String title, String value) {
+class _StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  const _StatCard(this.title, this.value);
+
+  @override
+  Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Color(0xFF11151F),
+          color: const Color(0xFF11151F),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Column(
           children: [
-            Text(title, style: TextStyle(color: Colors.grey)),
-            SizedBox(height: 8),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
+            Text(title, style: const TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
+            Text(value,
+                style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _menuItem(IconData icon, String title, {VoidCallback? onTap}) {
+class _MenuItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final VoidCallback? onTap;
+  const _MenuItem(this.icon, this.title, {this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        margin: EdgeInsets.only(bottom: 15),
-        padding: EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        margin: const EdgeInsets.only(bottom: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
         decoration: BoxDecoration(
-          color: Color(0xFF11151F),
+          color: const Color(0xFF11151F),
           borderRadius: BorderRadius.circular(20),
         ),
         child: Row(
           children: [
             Icon(icon, color: Colors.deepPurple),
-            SizedBox(width: 15),
+            const SizedBox(width: 15),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-              ),
+              child: Text(title,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white)),
             ),
-            Icon(Icons.arrow_forward_ios,
-                size: 16, color: Colors.grey),
+            Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
           ],
         ),
       ),
