@@ -1,240 +1,124 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DriverVerificationScreen extends StatefulWidget {
   const DriverVerificationScreen({super.key});
 
   @override
-  State<DriverVerificationScreen> createState() =>
-      _DriverVerificationScreenState();
+  State<DriverVerificationScreen> createState() => _DriverVerificationScreenState();
 }
 
-class _DriverVerificationScreenState
-    extends State<DriverVerificationScreen> {
+class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
+  final _supabase = Supabase.instance.client;
 
-  final profileUrlController =
-      TextEditingController();
-
-  final idFrontUrlController =
-      TextEditingController();
-
-  final idBackUrlController =
-      TextEditingController();
-
-  final licenseUrlController =
-      TextEditingController();
-
-  final carPhotoUrlController =
-      TextEditingController();
-
-  final plateController =
-      TextEditingController();
+  final profileUrlController = TextEditingController();
+  final idFrontUrlController = TextEditingController();
+  final idBackUrlController = TextEditingController();
+  final licenseUrlController = TextEditingController();
+  final carPhotoUrlController = TextEditingController();
+  final plateController = TextEditingController();
 
   bool isLoading = false;
 
+  String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
-      backgroundColor: Color(0xFF050816),
-
+      backgroundColor: const Color(0xFF050816),
       appBar: AppBar(
-        backgroundColor: Color(0xFF050816),
+        backgroundColor: const Color(0xFF050816),
         elevation: 0,
-
-        leading: BackButton(
-          color: Colors.white,
-        ),
-
-        title: Text(
-          "Identity Verification",
-
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
+        leading: const BackButton(color: Colors.white),
+        title: const Text("Identity Verification",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         actions: [
-
           Container(
-            margin: EdgeInsets.all(12),
-
-            padding: EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
-            ),
-
+            margin: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: Colors.deepPurple.withOpacity(0.2),
-              borderRadius:
-                  BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(18),
             ),
-
-            child: Text(
-              "Step\n2 of\n3",
-
-              textAlign: TextAlign.center,
-
-              style: TextStyle(
-                color: Colors.deepPurple,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
-            ),
+            child: const Text("Step\n2 of\n3",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    color: Colors.deepPurple,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12)),
           ),
         ],
       ),
-
       body: SingleChildScrollView(
-
-        padding: EdgeInsets.all(20),
-
+        padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment:
-              CrossAxisAlignment.start,
-
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-            // TOP PROGRESS
             Row(
               children: [
-
                 Expanded(
                   child: Container(
                     height: 6,
-
                     decoration: BoxDecoration(
                       color: Colors.deepPurple,
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
-
-                SizedBox(width: 10),
-
+                const SizedBox(width: 10),
                 Expanded(
                   child: Container(
                     height: 6,
-
                     decoration: BoxDecoration(
                       color: Colors.deepPurple,
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
-
-                SizedBox(width: 10),
-
+                const SizedBox(width: 10),
                 Expanded(
                   child: Container(
                     height: 6,
-
                     decoration: BoxDecoration(
-                      color: Color(0xFF11151F),
-                      borderRadius:
-                          BorderRadius.circular(20),
+                      color: const Color(0xFF11151F),
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                 ),
               ],
             ),
-
-            SizedBox(height: 35),
-
-            Text(
-              "Secure Your Account",
-
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            Text(
-              "Paste image URLs for your verification documents.",
-
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-                height: 1.5,
-              ),
-            ),
-
-            SizedBox(height: 35),
-
-            // PROFILE PHOTO
+            const SizedBox(height: 35),
+            const Text("Secure Your Account",
+                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+            const SizedBox(height: 10),
+            const Text("Paste image URLs for your verification documents.",
+                style: TextStyle(color: Colors.grey, fontSize: 16, height: 1.5)),
+            const SizedBox(height: 35),
             verificationCard(
               title: "Profile Photo",
-
-              subtitle:
-                  "Paste profile image URL.",
-
+              subtitle: "Paste profile image URL.",
               icon: Icons.person_outline,
-
               child: Column(
                 children: [
-
-                  textField(
-                    controller:
-                        profileUrlController,
-
-                    hint:
-                        "https://example.com/profile.jpg",
-                  ),
-
-                  SizedBox(height: 15),
-
-                  if (profileUrlController
-                      .text
-                      .isNotEmpty)
-
+                  textField(controller: profileUrlController, hint: "https://example.com/profile.jpg"),
+                  const SizedBox(height: 15),
+                  if (profileUrlController.text.isNotEmpty)
                     ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(
-                        20,
-                      ),
-
+                      borderRadius: BorderRadius.circular(20),
                       child: Image.network(
-                        profileUrlController
-                            .text,
-
+                        profileUrlController.text,
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
-
-                        errorBuilder:
-                            (context, error,
-                                stackTrace) {
-
+                        errorBuilder: (context, error, stackTrace) {
                           return Container(
                             height: 180,
-
-                            decoration:
-                                BoxDecoration(
-                              color: Color(0xFF1A1F2E),
-
-                              borderRadius:
-                                  BorderRadius
-                                      .circular(
-                                20,
-                              ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1F2E),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-
-                            child: Center(
-                              child: Text(
-                                "Invalid Image URL",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                            child: const Center(
+                                child: Text("Invalid Image URL", style: TextStyle(color: Colors.white))),
                           );
                         },
                       ),
@@ -242,85 +126,34 @@ class _DriverVerificationScreenState
                 ],
               ),
             ),
-
-            SizedBox(height: 25),
-
-            // VEHICLE
+            const SizedBox(height: 25),
             verificationCard(
-
               title: "Vehicle Information",
-
-              subtitle:
-                  "Enter plate number and car image URL.",
-
+              subtitle: "Enter plate number and car image URL.",
               icon: Icons.directions_car,
-
               child: Column(
                 children: [
-
-                  textField(
-                    controller:
-                        plateController,
-
-                    hint: "Plate Number",
-                  ),
-
-                  SizedBox(height: 20),
-
-                  textField(
-                    controller:
-                        carPhotoUrlController,
-
-                    hint:
-                        "https://example.com/car.jpg",
-                  ),
-
-                  SizedBox(height: 15),
-
-                  if (carPhotoUrlController
-                      .text
-                      .isNotEmpty)
-
+                  textField(controller: plateController, hint: "Plate Number"),
+                  const SizedBox(height: 20),
+                  textField(controller: carPhotoUrlController, hint: "https://example.com/car.jpg"),
+                  const SizedBox(height: 15),
+                  if (carPhotoUrlController.text.isNotEmpty)
                     ClipRRect(
-                      borderRadius:
-                          BorderRadius.circular(
-                        20,
-                      ),
-
+                      borderRadius: BorderRadius.circular(20),
                       child: Image.network(
-                        carPhotoUrlController
-                            .text,
-
+                        carPhotoUrlController.text,
                         height: 180,
                         width: double.infinity,
                         fit: BoxFit.cover,
-
-                        errorBuilder:
-                            (context, error,
-                                stackTrace) {
-
+                        errorBuilder: (context, error, stackTrace) {
                           return Container(
                             height: 180,
-
-                            decoration:
-                                BoxDecoration(
-                              color: Color(0xFF1A1F2E),
-
-                              borderRadius:
-                                  BorderRadius
-                                      .circular(
-                                20,
-                              ),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1A1F2E),
+                              borderRadius: BorderRadius.circular(20),
                             ),
-
-                            child: Center(
-                              child: Text(
-                                "Invalid Image URL",
-                                style: TextStyle(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
+                            child: const Center(
+                                child: Text("Invalid Image URL", style: TextStyle(color: Colors.white))),
                           );
                         },
                       ),
@@ -328,276 +161,111 @@ class _DriverVerificationScreenState
                 ],
               ),
             ),
-
-            SizedBox(height: 25),
-
-            // ID CARD
+            const SizedBox(height: 25),
             verificationCard(
-
               title: "Identity Card",
-
-              subtitle:
-                  "Front and back image URLs.",
-
+              subtitle: "Front and back image URLs.",
               icon: Icons.badge_outlined,
-
               child: Column(
                 children: [
-
-                  textField(
-                    controller:
-                        idFrontUrlController,
-
-                    hint:
-                        "Front ID Image URL",
-                  ),
-
-                  SizedBox(height: 15),
-
-                  textField(
-                    controller:
-                        idBackUrlController,
-
-                    hint:
-                        "Back ID Image URL",
-                  ),
+                  textField(controller: idFrontUrlController, hint: "Front ID Image URL"),
+                  const SizedBox(height: 15),
+                  textField(controller: idBackUrlController, hint: "Back ID Image URL"),
                 ],
               ),
             ),
-
-            SizedBox(height: 25),
-
-            // LICENSE
+            const SizedBox(height: 25),
             verificationCard(
-
-              title: "Driver’s License",
-
-              subtitle:
-                  "Paste license image URL.",
-
-              icon:
-                  Icons.workspace_premium_outlined,
-
-              child: textField(
-                controller:
-                    licenseUrlController,
-
-                hint:
-                    "https://example.com/license.jpg",
-              ),
+              title: "Driver's License",
+              subtitle: "Paste license image URL.",
+              icon: Icons.workspace_premium_outlined,
+              child: textField(controller: licenseUrlController, hint: "https://example.com/license.jpg"),
             ),
-
-            SizedBox(height: 25),
-
-            // INFO BOX
+            const SizedBox(height: 25),
             Container(
-              padding: EdgeInsets.all(18),
-
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.deepPurple.withOpacity(0.2),
-
-                borderRadius:
-                    BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(22),
               ),
-
-              child: Row(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
-                  Icon(
-                    Icons.verified_user,
-                    color: Colors.deepPurple,
-                  ),
-
+                  Icon(Icons.verified_user, color: Colors.deepPurple),
                   SizedBox(width: 12),
-
                   Expanded(
                     child: Text(
                       "Your data is securely stored for verification purposes only.",
-
-                      style: TextStyle(
-                        color: Colors.white70,
-                        height: 1.5,
-                      ),
+                      style: TextStyle(color: Colors.white70, height: 1.5),
                     ),
                   ),
                 ],
               ),
             ),
-
-            SizedBox(height: 35),
-
-            // CONTINUE BUTTON
+            const SizedBox(height: 35),
             SizedBox(
               width: double.infinity,
               height: 65,
-
               child: ElevatedButton(
-
-                style:
-                    ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Colors.deepPurple,
-
-                  shape:
-                      RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(
-                      30,
-                    ),
-                  ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
-
                 onPressed: () async {
-
-                  if (profileUrlController
-                          .text
-                          .isEmpty ||
-                      idFrontUrlController
-                          .text
-                          .isEmpty ||
-                      idBackUrlController
-                          .text
-                          .isEmpty ||
-                      licenseUrlController
-                          .text
-                          .isEmpty ||
-                      carPhotoUrlController
-                          .text
-                          .isEmpty ||
-                      plateController
-                          .text
-                          .isEmpty) {
-
-                    ScaffoldMessenger.of(
-                            context)
-                        .showSnackBar(
-
-                      SnackBar(
-                        backgroundColor:
-                            Colors.red,
-
-                        content: Text(
-                          "Complete all verification fields",
-                        ),
-                      ),
+                  if (profileUrlController.text.isEmpty ||
+                      idFrontUrlController.text.isEmpty ||
+                      idBackUrlController.text.isEmpty ||
+                      licenseUrlController.text.isEmpty ||
+                      carPhotoUrlController.text.isEmpty ||
+                      plateController.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          backgroundColor: Colors.red,
+                          content: Text("Complete all verification fields")),
                     );
-
                     return;
                   }
 
-                  setState(() {
-                    isLoading = true;
-                  });
+                  setState(() => isLoading = true);
 
                   try {
+                    await _supabase.from('profiles').update({
+                      'profile_photo_url': profileUrlController.text,
+                      'id_front_url': idFrontUrlController.text,
+                      'id_back_url': idBackUrlController.text,
+                      'license_url': licenseUrlController.text,
+                      'car_photo_url': carPhotoUrlController.text,
+                      'plate_number': plateController.text,
+                      'verification_status': 'under_review',
+                      'is_verified': false,
+                    }).eq('id', _currentUserId);
 
-                    final user =
-                        FirebaseAuth.instance
-                            .currentUser;
-
-                    await FirebaseFirestore
-                        .instance
-                        .collection("users")
-                        .doc(user!.uid)
-                        .update({
-
-                      "profilePhotoUrl":
-                          profileUrlController
-                              .text,
-
-                      "idFrontUrl":
-                          idFrontUrlController
-                              .text,
-
-                      "idBackUrl":
-                          idBackUrlController
-                              .text,
-
-                      "licenseUrl":
-                          licenseUrlController
-                              .text,
-
-                      "carPhotoUrl":
-                          carPhotoUrlController
-                              .text,
-
-                      "plateNumber":
-                          plateController.text,
-
-                      "verificationStatus":
-                          "under_review",
-
-                      "isVerified": false,
-                    });
-
-                    ScaffoldMessenger.of(
-                            context)
-                        .showSnackBar(
-
-                      SnackBar(
-                        backgroundColor:
-                            Colors.green,
-
-                        content: Text(
-                          "Documents submitted successfully",
-                        ),
-                      ),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          backgroundColor: Colors.green,
+                          content: Text("Documents submitted successfully")),
                     );
-
                     Navigator.pop(context);
-
                   } catch (e) {
-
-                    ScaffoldMessenger.of(
-                            context)
-                        .showSnackBar(
-
-                      SnackBar(
-                        backgroundColor:
-                            Colors.red,
-
-                        content:
-                            Text(e.toString()),
-                      ),
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(backgroundColor: Colors.red, content: Text(e.toString())),
                     );
                   }
 
-                  setState(() {
-                    isLoading = false;
-                  });
+                  setState(() => isLoading = false);
                 },
-
                 child: isLoading
-                    ? CircularProgressIndicator(
-                        color: Colors.white,
-                      )
-                    : Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment
-                                .center,
-
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
-                          Text(
-                            "Continue",
-
-                            style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.white,
-                              fontWeight:
-                                  FontWeight.bold,
-                            ),
-                          ),
-
+                          Text("Continue",
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
                           SizedBox(width: 10),
-
-                          Icon(
-                            Icons.arrow_forward,
-                            color: Colors.white,
-                          ),
+                          Icon(Icons.arrow_forward, color: Colors.white),
                         ],
                       ),
               ),
@@ -608,121 +276,61 @@ class _DriverVerificationScreenState
     );
   }
 
-  // TEXT FIELD
-  Widget textField({
-    required TextEditingController
-        controller,
-    required String hint,
-  }) {
-
+  Widget textField({required TextEditingController controller, required String hint}) {
     return TextField(
       controller: controller,
-
-      style: TextStyle(
-        color: Colors.white,
-      ),
-
-      onChanged: (value) {
-        setState(() {});
-      },
-
+      style: const TextStyle(color: Colors.white),
+      onChanged: (value) => setState(() {}),
       decoration: InputDecoration(
         hintText: hint,
-
-        hintStyle: TextStyle(
-          color: Colors.grey,
-        ),
-
+        hintStyle: const TextStyle(color: Colors.grey),
         filled: true,
-        fillColor: Color(0xFF1A1F2E),
-
+        fillColor: const Color(0xFF1A1F2E),
         border: OutlineInputBorder(
-          borderRadius:
-              BorderRadius.circular(18),
-
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
       ),
     );
   }
 
-  // CARD
   Widget verificationCard({
     required String title,
     required String subtitle,
     required IconData icon,
     required Widget child,
   }) {
-
     return Container(
-      padding: EdgeInsets.all(22),
-
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: Color(0xFF11151F),
-
-        borderRadius:
-            BorderRadius.circular(28),
+        color: const Color(0xFF11151F),
+        borderRadius: BorderRadius.circular(28),
       ),
-
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start,
-
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
-            mainAxisAlignment:
-                MainAxisAlignment.spaceBetween,
-
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-
               Expanded(
                 child: Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment
-                          .start,
-
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
-                    Text(
-                      title,
-
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight:
-                            FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    SizedBox(height: 6),
-
-                    Text(
-                      subtitle,
-
-                      style: TextStyle(
-                        color: Colors.grey,
-                        height: 1.4,
-                      ),
-                    ),
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
+                    const SizedBox(height: 6),
+                    Text(subtitle, style: const TextStyle(color: Colors.grey, height: 1.4)),
                   ],
                 ),
               ),
-
               CircleAvatar(
-                backgroundColor:
-                    Colors.deepPurple.withOpacity(0.2),
-
-                child: Icon(
-                  icon,
-                  color: Colors.deepPurple,
-                ),
+                backgroundColor: Colors.deepPurple.withOpacity(0.2),
+                child: Icon(icon, color: Colors.deepPurple),
               ),
             ],
           ),
-
-          SizedBox(height: 20),
-
+          const SizedBox(height: 20),
           child,
         ],
       ),

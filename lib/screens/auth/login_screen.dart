@@ -4,9 +4,6 @@ import '../../services/auth_service.dart';
 import '../passenger/passenger_home_screen.dart';
 import '../driver/driver_home_screen.dart';
 import '../../models/user_model.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import '../../theme/app_theme.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +16,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   final _formKey = GlobalKey<FormState>();
@@ -29,39 +26,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   void dispose() {
-    emailController.dispose();
+    phoneController.dispose();
     passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _sendResetLink() async {
-    if (emailController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.danger,
-          content: Text("Enter your email first"),
-        ),
-      );
-      return;
-    }
-
-    try {
-      await FirebaseAuth.instance
-          .sendPasswordResetEmail(email: emailController.text.trim());
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          backgroundColor: AppColors.success,
-          content: Text("Password reset email sent"),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.danger,
-          content: Text(e.toString()),
-        ),
-      );
-    }
   }
 
   Future<void> _login() async {
@@ -70,22 +37,16 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     final result = await AuthService.login(
-      email: emailController.text,
+      phone: phoneController.text,
       password: passwordController.text,
       role: widget.role,
     );
 
+    if (!mounted) return;
     setState(() => isLoading = false);
 
     if (result is UserModel) {
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null) {
-        await FirebaseFirestore.instance
-            .collection("users")
-            .doc(result.uid)
-            .update({"notificationToken": token});
-      }
-
+      if (!mounted) return;
       if (result.role == "passenger") {
         Navigator.pushReplacement(
           context,
@@ -98,6 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: AppColors.danger,
@@ -168,17 +130,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     children: [
                       TextFormField(
-                        controller: emailController,
+                        controller: phoneController,
                         style: const TextStyle(color: Colors.white),
-                        keyboardType: TextInputType.emailAddress,
+                        keyboardType: TextInputType.phone,
                         decoration: const InputDecoration(
-                          labelText: "Email",
+                          labelText: "Phone Number",
                           labelStyle: TextStyle(color: AppColors.textMuted),
-                          prefixIcon: Icon(Icons.mail_outline),
+                          prefixIcon: Icon(Icons.phone_outlined),
                         ),
                         validator: (value) {
                           if (value == null || value.trim().isEmpty) {
-                            return "Email is required";
+                            return "Phone number is required";
                           }
                           return null;
                         },
@@ -216,21 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                       ),
 
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _sendResetLink,
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 28),
 
                       PremiumButton(
                         label: "Login",
