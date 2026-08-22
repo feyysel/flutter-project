@@ -19,10 +19,9 @@ Frontend
 
 Backend
 
-- Firebase Authentication
-- Cloud Firestore
-- Firebase Storage
-- Firebase Cloud Messaging (FCM)
+- Supabase Authentication
+- Supabase Storage
+- supabase messaging
 
 ---
 
