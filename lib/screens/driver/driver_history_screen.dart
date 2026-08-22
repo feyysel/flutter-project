@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/premium_ui.dart';
 
 class DriverHistoryScreen extends StatelessWidget {
   const DriverHistoryScreen({super.key});
@@ -10,68 +12,101 @@ class DriverHistoryScreen extends StatelessWidget {
     final userId = supabase.auth.currentUser?.id ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050816),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Trip History", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF11151F),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Trip History",
+            style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4)),
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: supabase
-            .from('ride_history')
-            .stream(primaryKey: ['id'])
-            .eq('driver_id', userId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: PremiumBackground(
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: supabase
+              .from('ride_history')
+              .stream(primaryKey: ['id'])
+              .eq('driver_id', userId),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final rides = snapshot.data!;
+            final rides = snapshot.data!;
 
-          if (rides.isEmpty) {
-            return const Center(
-              child: Text("No completed trips", style: TextStyle(color: Colors.white70)),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: rides.length,
-            itemBuilder: (context, index) {
-              final ride = rides[index];
-              return Container(
-                margin: const EdgeInsets.only(bottom: 15),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF11151F),
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: const [
-                    BoxShadow(color: Colors.black54, blurRadius: 8),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("${ride['from']} → ${ride['to']}",
-                        style: const TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-                    const SizedBox(height: 10),
-                    Text("Passenger: ${ride['passenger_name'] ?? ''}",
-                        style: const TextStyle(color: Colors.white70)),
-                    const SizedBox(height: 6),
-                    Text("Earned: ${ride['price']} ETB",
-                        style: const TextStyle(color: Colors.white70)),
-                    const SizedBox(height: 6),
-                    const Text("COMPLETED",
-                        style: TextStyle(
-                            color: Colors.greenAccent, fontWeight: FontWeight.bold)),
-                  ],
-                ),
+            if (rides.isEmpty) {
+              return const EmptyState(
+                icon: Icons.route_rounded,
+                title: "No completed trips",
+                message: "Trips you complete will appear here.",
               );
-            },
-          );
-        },
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              itemCount: rides.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final ride = rides[index];
+                return Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.97),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const StatusChip("Completed",
+                              color: AppColors.success),
+                          const Spacer(),
+                          Text("+ ${ride['price']} ETB",
+                              style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.success)),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      RoutePoints(
+                        from: ride['from']?.toString() ?? '',
+                        to: ride['to']?.toString() ?? '',
+                      ),
+                      if ((ride['passenger_name'] ?? '')
+                          .toString()
+                          .isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            const Icon(Icons.person_outline_rounded,
+                                size: 15, color: AppColors.textMuted),
+                            const SizedBox(width: 6),
+                            Text("${ride['passenger_name']}",
+                                style: const TextStyle(
+                                    fontSize: 12.5,
+                                    color: AppColors.textSecondary)),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

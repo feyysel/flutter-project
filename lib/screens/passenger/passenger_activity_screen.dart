@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'passenger_profile_screen.dart';
 import 'passenger_home_screen.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/ride_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/premium_side_menu.dart';
+import '../../widgets/premium_ui.dart';
 
 class PassengerActivityScreen extends StatefulWidget {
   const PassengerActivityScreen({super.key});
@@ -17,193 +20,279 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
 
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
+  static const List<SideMenuItem> _menuItems = [
+    SideMenuItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: "Home"),
+    SideMenuItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long, label: "Activity"),
+    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+  ];
+
+  Widget _menuDestination(int index) {
+    switch (index) {
+      case 0:
+        return PassengerHomeScreen();
+      case 2:
+        return PassengerProfileScreen();
+      default:
+        return PassengerActivityScreen();
+    }
+  }
+
+  Future<void> _signOut() async {
+    await _supabase.auth.signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  Color _statusColor(String status) {
+    switch (status) {
+      case "accepted":
+        return AppColors.success;
+      case "completed":
+        return AppColors.primaryVivid;
+      default:
+        return AppColors.warning;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    int currentIndex = 1;
-
     return Scaffold(
-      backgroundColor: const Color(0xFF050816),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text("Activity", style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF11151F),
-        elevation: 10,
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text("Activity",
+            style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        leading: Builder(
+          builder: (menuContext) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(menuContext).openDrawer(),
+          ),
+        ),
       ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        stream: _supabase
-            .from('ride_requests')
-            .stream(primaryKey: ['id'])
-            .eq('passenger_id', _currentUserId),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      drawer: PremiumSideMenu(
+        items: _menuItems,
+        currentIndex: 1,
+        roleLabel: 'Passenger',
+        onLogout: _signOut,
+        onItemTap: (index) => PremiumSideMenu.navigateAfterClose(
+          context,
+          _menuDestination(index),
+          isCurrent: index == 1,
+        ),
+      ),
+      body: PremiumBackground(
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: _supabase
+              .from('ride_requests')
+              .stream(primaryKey: ['id'])
+              .eq('passenger_id', _currentUserId),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (snapshot.data!.isEmpty) {
-            return const Center(
-              child: Text("No ride activity yet",
-                  style: TextStyle(color: Colors.white)),
-            );
-          }
+            if (snapshot.data!.isEmpty) {
+              return const EmptyState(
+                icon: Icons.receipt_long_rounded,
+                title: "No ride activity yet",
+                message: "Book your first intercity trip and it will show up here.",
+              );
+            }
 
-          final rides = snapshot.data!;
+            final rides = snapshot.data!;
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: rides.length,
-            itemBuilder: (context, index) {
-              final ride = rides[index];
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              itemCount: rides.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                final ride = rides[index];
+                final statusColor =
+                    _statusColor(ride['status'].toString());
 
-              Color statusColor = Colors.orange;
-              if (ride['status'] == "accepted") statusColor = Colors.green;
-              if (ride['status'] == "completed") statusColor = Colors.deepPurple;
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF11151F),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text("${ride['from']} → ${ride['to']}",
+                return Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface.withValues(alpha: 0.97),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(color: AppColors.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          StatusChip(ride['status'].toString(),
+                              color: statusColor),
+                          const Spacer(),
+                          Text("${ride['price']} ETB",
                               style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppColors.gold)),
+                        ],
+                      ),
+                      const SizedBox(height: 14),
+                      RoutePoints(
+                        from: ride['from']?.toString() ?? '',
+                        to: ride['to']?.toString() ?? '',
+                      ),
+                      if (ride['status'] == "pending") ...[
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            const Icon(Icons.hourglass_top_rounded,
+                                size: 16, color: AppColors.warning),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                  "Waiting for driver acceptance…",
+                                  style: TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.warning)),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 14),
+                        _CancelButton(
+                            onRequestCancelled: () =>
+                                RideService.deleteRideRequest(ride['id'])),
+                      ],
+                      if (ride['status'] == "accepted") ...[
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            const Icon(Icons.check_circle_rounded,
+                                size: 16, color: AppColors.success),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text("Driver accepted your ride",
+                                  style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.success)),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
-                            color: statusColor,
-                            borderRadius: BorderRadius.circular(14),
+                            color: AppColors.surfaceHigh,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppColors.border),
                           ),
-                          child: Text(
-                            ride['status'].toString().toUpperCase(),
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const MicroLabel("Your driver",
+                                  color: AppColors.accent),
+                              const SizedBox(height: 10),
+                              _detailRow(Icons.person_outline_rounded,
+                                  ride['driver_name']),
+                              const SizedBox(height: 8),
+                              _detailRow(Icons.phone_outlined,
+                                  ride['driver_phone']),
+                              const SizedBox(height: 8),
+                              _detailRow(Icons.badge_outlined,
+                                  ride['driver_plate']),
+                            ],
                           ),
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 14),
-                    Text("Price: ${ride['price']} ETB",
-                        style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 6),
-                    Text("Passenger: ${ride['passenger_name']}",
-                        style: const TextStyle(color: Colors.grey)),
-                    const SizedBox(height: 10),
-                    if (ride['status'] == "pending")
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Waiting for driver acceptance",
-                              style: TextStyle(
-                                  color: Colors.orange,
-                                  fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.red),
-                              onPressed: () async {
-                                await RideService.deleteRideRequest(ride['id']);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      backgroundColor: Colors.red,
-                                      content: Text("Ride request cancelled")),
-                                );
-                              },
-                              child: const Text("Cancel Request"),
+                      if (ride['status'] == "completed") ...[
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            const Icon(Icons.verified_rounded,
+                                size: 16, color: AppColors.primaryVivid),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text("Ride completed successfully",
+                                  style: const TextStyle(
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primaryVivid)),
                             ),
-                          ),
-                        ],
-                      ),
-                    if (ride['status'] == "accepted")
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text("Driver accepted your ride",
-                              style: TextStyle(
-                                  color: Colors.green,
-                                  fontWeight: FontWeight.bold)),
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1A1F2E),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text("Driver Details",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16)),
-                                const SizedBox(height: 10),
-                                Text("Name: ${ride['driver_name'] ?? ''}",
-                                    style: const TextStyle(color: Colors.grey)),
-                                const SizedBox(height: 6),
-                                Text("Phone: ${ride['driver_phone'] ?? ''}",
-                                    style: const TextStyle(color: Colors.grey)),
-                                const SizedBox(height: 6),
-                                Text(
-                                    "Plate Number: ${ride['driver_plate'] ?? ''}",
-                                    style: const TextStyle(color: Colors.grey)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    if (ride['status'] == "completed")
-                      const Text("Ride completed successfully",
-                          style: TextStyle(
-                              color: Colors.deepPurple,
-                              fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: const Color(0xFF11151F),
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() => currentIndex = index);
-          if (index == 0) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => PassengerHomeScreen()));
-          } else if (index == 1) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => PassengerActivityScreen()));
-          } else if (index == 2) {
-            Navigator.pushReplacement(context,
-                MaterialPageRoute(builder: (_) => PassengerProfileScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long), label: "Activity"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
+    );
+  }
+
+  Widget _detailRow(IconData icon, dynamic value) {
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: AppColors.textMuted),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            (value == null || value.toString().isEmpty)
+                ? "—"
+                : value.toString(),
+            style: const TextStyle(
+                fontSize: 13.5, color: AppColors.textSecondary),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CancelButton extends StatelessWidget {
+  const _CancelButton({required this.onRequestCancelled});
+
+  final Future<void> Function() onRequestCancelled;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await onRequestCancelled();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              backgroundColor: AppColors.danger,
+              content: Text("Ride request cancelled")),
+        );
+      },
+      child: Container(
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.danger.withValues(alpha: 0.45)),
+          color: AppColors.danger.withValues(alpha: 0.08),
+        ),
+        child: const Text(
+          "Cancel Request",
+          style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.danger),
+        ),
       ),
     );
   }

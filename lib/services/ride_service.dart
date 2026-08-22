@@ -12,6 +12,8 @@ class RideService {
     required String driverName,
     required String vehicleModel,
     required int seats,
+    String? pickupLocation,
+    String? dropLocation,
   }) async {
     await _client.from('posts').insert({
       'driver_id': driverId,
@@ -24,6 +26,8 @@ class RideService {
       'total_seats': seats,
       'available_seats': seats,
       'vehicle_model': vehicleModel,
+      if (pickupLocation != null) 'pickup_location': pickupLocation,
+      if (dropLocation != null) 'drop_location': dropLocation,
       'is_online': true,
       'is_full': false,
       'status': 'active',
