@@ -7,24 +7,52 @@ import 'passenger_activity_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../services/location_service.dart';
+import '../../widgets/premium_side_menu.dart';
+import '../../widgets/premium_ui.dart';
 
 class PassengerHomeScreen extends StatefulWidget {
   const PassengerHomeScreen({super.key});
 
   @override
-  _PassengerHomeScreenState createState() => _PassengerHomeScreenState();
+  State<PassengerHomeScreen> createState() => _PassengerHomeScreenState();
 }
 
 class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
-  int currentIndex = 0;
   final MapController mapController = MapController();
   LatLng currentLocation = LatLng(9.5931, 41.8661);
   bool _mapReady = false;
-  String pickup = "";
   String destination = "";
   final _supabase = Supabase.instance.client;
 
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
+
+  Stream<List<Map<String, dynamic>>> get _onlineDriversStream => _supabase
+      .from('profiles')
+      .stream(primaryKey: ['id'])
+      .eq('is_online', true);
+
+  static const List<SideMenuItem> _menuItems = [
+    SideMenuItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: "Home"),
+    SideMenuItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long, label: "Activity"),
+    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+  ];
+
+  Widget _menuDestination(int index) {
+    switch (index) {
+      case 1:
+        return PassengerActivityScreen();
+      case 2:
+        return PassengerProfileScreen();
+      default:
+        return PassengerHomeScreen();
+    }
+  }
+
+  Future<void> _signOut() async {
+    await _supabase.auth.signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
   @override
   void initState() {
@@ -61,9 +89,10 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         .eq('user_id', _currentUserId)
         .listen((snapshot) {
       for (var data in snapshot) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: AppColors.surfaceHigh,
             content: Text(data["title"] ?? ""),
           ),
         );
@@ -74,7 +103,18 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF050816),
+      backgroundColor: AppColors.background,
+      drawer: PremiumSideMenu(
+        items: _menuItems,
+        currentIndex: 0,
+        roleLabel: 'Passenger',
+        onLogout: _signOut,
+        onItemTap: (index) => PremiumSideMenu.navigateAfterClose(
+          context,
+          _menuDestination(index),
+          isCurrent: index == 0,
+        ),
+      ),
       body: Stack(
         children: [
           Positioned.fill(
@@ -109,10 +149,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   ],
                 ),
                 StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: _supabase
-                      .from('profiles')
-                      .stream(primaryKey: ['id'])
-                      .eq('is_online', true),
+                  stream: _onlineDriversStream,
                   builder: (context, snapshot) {
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const SizedBox.shrink();
@@ -145,196 +182,334 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
               ],
             ),
           ),
+
+          // Ambient glow accents over the map edges.
+          const Positioned(
+            top: -120,
+            right: -100,
+            child: _Glow(size: 320, color: Color(0x477C4DFF)),
+          ),
+          const Positioned(
+            bottom: -60,
+            left: -120,
+            child: _Glow(size: 340, color: Color(0x4D6D28D9)),
+          ),
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
                   const SizedBox(height: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 15, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: AppColors.border),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor:
-                              AppColors.primary.withValues(alpha: 0.2),
-                          child: Icon(Icons.person,
-                              color: AppColors.primary, size: 20),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            destination.isEmpty ? "Where to?" : destination,
-                            style: const TextStyle(
-                                color: Colors.white, fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.notifications,
-                              color: AppColors.primary, size: 20),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (_) => RideListScreen()));
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      height: 55,
-                      decoration: BoxDecoration(
-                        gradient: AppGradients.surface,
-                        borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.search, color: AppColors.primary),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              destination.isEmpty ? "Where to?" : destination,
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward,
-                              color: AppColors.primary, size: 20),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text("RECENT",
-                        style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2,
-                            fontSize: 11,
-                            color: AppColors.textSecondary)),
-                  ),
-                  const SizedBox(height: 15),
-                  GestureDetector(
-                    onTap: () => setState(() => destination = "Home"),
-                    child: Container(
-                      padding: const EdgeInsets.all(15),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface.withValues(alpha: 0.92),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: AppColors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                                gradient: AppGradients.primary,
-                                shape: BoxShape.circle),
-                            child: const Icon(Icons.home, color: Colors.white),
-                          ),
-                          const SizedBox(width: 15),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text("Home",
-                                    style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold)),
-                                Text("Saved location",
-                                    style: TextStyle(color: Colors.grey)),
-                              ],
-                            ),
-                          ),
-                          Icon(Icons.arrow_forward_ios,
-                              size: 16, color: Colors.grey),
-                        ],
-                      ),
-                    ),
-                  ),
+                  _buildTopBar(),
                   const Spacer(),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.timer_outlined, size: 16, color: AppColors.gold),
-                        SizedBox(width: 5),
-                        Text("3 min", style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 80),
+                  _buildBookingCard(),
+                  const SizedBox(height: 22),
                 ],
               ),
             ),
           ),
+
           Positioned(
-            bottom: 120,
             right: 20,
-            child: FloatingActionButton(
-              backgroundColor: AppColors.surfaceHigh,
-              elevation: 6,
-              onPressed: () => mapController.move(currentLocation, 15),
-              child:
-                  Icon(Icons.my_location, color: AppColors.primary),
-            ),
+            bottom: 132,
+            child: _buildRecenterButton(),
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: const Color(0xFF11151F),
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        onTap: (index) {
-          setState(() => currentIndex = index);
-          if (index == 0) {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => PassengerHomeScreen()));
-          } else if (index == 1) {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => PassengerActivityScreen()));
-          } else if (index == 2) {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (_) => PassengerProfileScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.receipt_long), label: "Activity"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      children: [
+        Builder(
+          builder: (menuContext) => GestureDetector(
+            onTap: () => Scaffold.of(menuContext).openDrawer(),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.surface.withValues(alpha: 0.92),
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.menu_rounded,
+                  color: AppColors.textPrimary, size: 22),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            gradient: AppGradients.primary,
+            borderRadius: BorderRadius.circular(13),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withValues(alpha: 0.45),
+                blurRadius: 16,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.directions_car_rounded,
+              color: Colors.white, size: 21),
+        ),
+        const SizedBox(width: 10),
+        const Text(
+          "DriveOn",
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
+            color: AppColors.textPrimary,
+          ),
+        ),
+        const Spacer(),
+        _buildOnlineDriversChip(),
+      ],
+    );
+  }
+
+  Widget _buildOnlineDriversChip() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.92),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppColors.border),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
         ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const _PulseDot(),
+          const SizedBox(width: 7),
+          StreamBuilder<List<Map<String, dynamic>>>(
+            stream: _onlineDriversStream,
+            builder: (context, snapshot) {
+              var count = 0;
+              if (snapshot.hasData) {
+                count = snapshot.data!
+                    .where((d) => d['lat'] is num && d['lng'] is num)
+                    .length;
+              }
+              return Text(
+                "$count online",
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingCard() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          SlideUpRoute(page: RideListScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppColors.surface.withValues(alpha: 0.97),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primary.withValues(alpha: 0.25),
+              blurRadius: 32,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                gradient: AppGradients.primary,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.45),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.search_rounded,
+                  color: Colors.white, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const MicroLabel('Plan your ride', color: AppColors.accent),
+                  const SizedBox(height: 5),
+                  Text(
+                    destination.isEmpty
+                        ? "Where are you going?"
+                        : destination,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceHigh,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Icon(Icons.arrow_forward_rounded,
+                  color: AppColors.accent, size: 20),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecenterButton() {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: AppColors.surface.withValues(alpha: 0.95),
+        shape: BoxShape.circle,
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => mapController.move(currentLocation, 15),
+          child: const Icon(Icons.my_location_rounded,
+              color: AppColors.accent, size: 22),
+        ),
+      ),
+    );
+  }
+}
+
+/// Soft radial glow blob used behind the map overlays.
+class _Glow extends StatelessWidget {
+  const _Glow({required this.size, required this.color});
+
+  final double size;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [color, color.withValues(alpha: 0)]),
+        ),
+      ),
+    );
+  }
+}
+
+/// Pulsing green status dot for the live drivers chip.
+class _PulseDot extends StatefulWidget {
+  const _PulseDot();
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+    _opacity = Tween(begin: 0.35, end: 1.0)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _opacity,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: const BoxDecoration(
+          color: AppColors.success,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.success,
+              blurRadius: 6,
+              spreadRadius: 1,
+            ),
+          ],
+        ),
       ),
     );
   }

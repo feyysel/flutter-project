@@ -117,6 +117,13 @@ CREATE INDEX IF NOT EXISTS idx_ride_history_passenger ON ride_history(passenger_
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 
 -- ========================
+-- MIGRATION: optional pickup / drop points on posts
+-- Run this once in the Supabase SQL editor if your table already exists
+-- ========================
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS pickup_location TEXT;
+ALTER TABLE posts ADD COLUMN IF NOT EXISTS drop_location TEXT;
+
+-- ========================
 -- ROW LEVEL SECURITY (RLS)
 -- ========================
 

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import '../widgets/premium_side_menu.dart';
 import 'admin_users.dart';
 import 'admin_rides.dart';
 import 'admin_verifications.dart';
@@ -14,6 +16,13 @@ class AdminDashboard extends StatefulWidget {
 class _AdminDashboardState extends State<AdminDashboard> {
   int _selectedIndex = 0;
 
+  static const List<SideMenuItem> _menuItems = [
+    SideMenuItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: "Dashboard"),
+    SideMenuItem(icon: Icons.people_outline, activeIcon: Icons.people, label: "Users"),
+    SideMenuItem(icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car, label: "Rides"),
+    SideMenuItem(icon: Icons.verified_user_outlined, activeIcon: Icons.verified_user, label: "Verify"),
+  ];
+
   final List<Widget> _pages = [
     const AdminStatsPage(),
     const AdminUsersPage(),
@@ -26,6 +35,37 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final isWide = MediaQuery.of(context).size.width > 800;
 
     return Scaffold(
+      appBar: isWide
+          ? null
+          : AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              title: Row(
+                children: [
+                  const Icon(Icons.admin_panel_settings,
+                      color: AppColors.primary, size: 22),
+                  const SizedBox(width: 8),
+                  Text("DriveOn Admin",
+                      style: TextStyle(color: AppColors.textPrimary)),
+                ],
+              ),
+              leading: Builder(
+                builder: (menuContext) => IconButton(
+                  icon: const Icon(Icons.menu_rounded,
+                      color: AppColors.textPrimary),
+                  onPressed: () => Scaffold.of(menuContext).openDrawer(),
+                ),
+              ),
+            ),
+      drawer: PremiumSideMenu(
+        items: _menuItems,
+        currentIndex: _selectedIndex,
+        roleLabel: 'Administrator',
+        onItemTap: (index) {
+          Navigator.of(context).pop();
+          setState(() => _selectedIndex = index);
+        },
+      ),
       body: Row(
         children: [
           if (isWide)
@@ -87,29 +127,6 @@ class _AdminDashboardState extends State<AdminDashboard> {
           Expanded(child: _pages[_selectedIndex]),
         ],
       ),
-      bottomNavigationBar: !isWide
-          ? NavigationBar(
-              selectedIndex: _selectedIndex,
-              onDestinationSelected: (index) {
-                setState(() => _selectedIndex = index);
-              },
-              backgroundColor: const Color(0xFF11151F),
-              indicatorColor: const Color(0xFF7C4DFF).withOpacity(0.2),
-              destinations: const [
-                NavigationDestination(
-                    icon: Icon(Icons.dashboard_outlined),
-                    label: "Dashboard"),
-                NavigationDestination(
-                    icon: Icon(Icons.people_outline), label: "Users"),
-                NavigationDestination(
-                    icon: Icon(Icons.directions_car_outlined),
-                    label: "Rides"),
-                NavigationDestination(
-                    icon: Icon(Icons.verified_user_outlined),
-                    label: "Verify"),
-              ],
-            )
-          : null,
     );
   }
 }

@@ -6,6 +6,8 @@ import 'driver_home_screen.dart';
 import 'driver_history_screen.dart';
 import 'driver_verification_screen.dart';
 import '../../services/auth_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/premium_side_menu.dart';
 
 class DriverProfileScreen extends StatefulWidget {
   @override
@@ -13,8 +15,27 @@ class DriverProfileScreen extends StatefulWidget {
 }
 
 class _DriverProfileScreenState extends State<DriverProfileScreen> {
-  int currentIndex = 3;
   final _supabase = Supabase.instance.client;
+
+  static const List<SideMenuItem> _menuItems = [
+    SideMenuItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: "Map"),
+    SideMenuItem(icon: Icons.add_circle_outline, activeIcon: Icons.add_circle, label: "Ride Post"),
+    SideMenuItem(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet, label: "Earnings"),
+    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+  ];
+
+  Widget _menuDestination(int index) {
+    switch (index) {
+      case 0:
+        return DriverHomeScreen();
+      case 1:
+        return DriverRidePostScreen();
+      case 2:
+        return DriverEarningsScreen();
+      default:
+        return DriverProfileScreen();
+    }
+  }
 
   Map<String, dynamic>? driverData;
   int totalTrips = 0;
@@ -141,13 +162,24 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
   Widget build(BuildContext context) {
     if (driverData == null) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF050816),
+      backgroundColor: AppColors.background,
+      drawer: PremiumSideMenu(
+        items: _menuItems,
+        currentIndex: 3,
+        roleLabel: 'Driver',
+        onLogout: logout,
+        onItemTap: (index) => PremiumSideMenu.navigateAfterClose(
+          context,
+          _menuDestination(index),
+          isCurrent: index == 3,
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -155,6 +187,12 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               child: Row(
                 children: [
+                  Builder(
+                    builder: (menuContext) => IconButton(
+                      icon: const Icon(Icons.menu_rounded, color: Colors.white),
+                      onPressed: () => Scaffold.of(menuContext).openDrawer(),
+                    ),
+                  ),
                   const Text("Driver Profile",
                       style: TextStyle(
                           color: Colors.white,
@@ -179,7 +217,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.deepPurple, width: 3),
+                            border: Border.all(color: AppColors.primary, width: 3),
                           ),
                           child: CircleAvatar(
                             radius: 40,
@@ -200,8 +238,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                           right: 5,
                           child: Container(
                             padding: const EdgeInsets.all(6),
-                            decoration: const BoxDecoration(
-                                color: Colors.deepPurple, shape: BoxShape.circle),
+                            decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                             child: const Icon(Icons.camera_alt,
                                 color: Colors.white, size: 18),
                           ),
@@ -218,7 +255,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.star, color: Colors.deepPurple, size: 18),
+                        Icon(Icons.star, color: AppColors.primary, size: 18),
                         SizedBox(width: 5),
                         Text("4.95",
                             style: TextStyle(
@@ -239,19 +276,19 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                         decoration: BoxDecoration(
                           color: driverData!["verification_status"] == "verified"
-                              ? Colors.green.withOpacity(0.2)
+                              ? AppColors.success.withValues(alpha: 0.14)
                               : driverData!["verification_status"] == "under_review"
-                                  ? Colors.orange.withOpacity(0.2)
+                                  ? AppColors.warning.withValues(alpha: 0.14)
                                   : driverData!["verification_status"] == "rejected"
-                                      ? Colors.red.withOpacity(0.2)
-                                      : Colors.deepPurple.withOpacity(0.2),
+                                      ? AppColors.danger.withValues(alpha: 0.14)
+                                      : AppColors.primary.withValues(alpha: 0.14),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.deepPurple),
+                          border: Border.all(color: AppColors.primary),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.verified, color: Colors.deepPurple, size: 18),
+                            const Icon(Icons.verified, color: AppColors.primary, size: 18),
                             const SizedBox(width: 8),
                             Text(
                               driverData!["verification_status"] == "verified"
@@ -262,7 +299,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                                           ? "Document Rejected"
                                           : "Verify Account",
                               style: const TextStyle(
-                                  color: Colors.deepPurple, fontWeight: FontWeight.bold),
+                                  color: AppColors.primary, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
@@ -286,14 +323,14 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 25),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF11151F),
+                          color: AppColors.surface,
                           borderRadius: BorderRadius.circular(24),
                         ),
                         child: Column(
                           children: [
                             const Text("ACCEPTANCE",
                                 style: TextStyle(
-                                    color: Colors.grey,
+                                    color: AppColors.textSecondary,
                                     letterSpacing: 2,
                                     fontSize: 12)),
                             const SizedBox(height: 10),
@@ -331,17 +368,38 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     settingsTile(icon: Icons.settings, title: "App Settings"),
                     settingsTile(icon: Icons.help, title: "Help & Support"),
                     const SizedBox(height: 35),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF11151F)),
-                      onPressed: () async {
+                    GestureDetector(
+                      onTap: () async {
                         await AuthService.logout();
                         if (mounted) {
                           Navigator.of(context).popUntil((route) => route.isFirst);
                         }
                       },
-                      child: const Text("Log Out",
-                          style: TextStyle(color: Color.fromARGB(255, 253, 2, 2))),
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 16),
+                        width: double.infinity,
+                        height: 54,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: AppColors.danger.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                              color: AppColors.danger.withValues(alpha: 0.30)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.logout_rounded,
+                                size: 19, color: AppColors.danger),
+                            const SizedBox(width: 9),
+                            const Text("Log Out",
+                                style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.danger)),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 35),
                   ],
@@ -351,33 +409,6 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: const Color(0xFF050816),
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        elevation: 10,
-        onTap: (index) {
-          setState(() => currentIndex = index);
-          if (index == 0) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DriverHomeScreen()));
-          } else if (index == 1) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DriverRidePostScreen()));
-          } else if (index == 2) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DriverEarningsScreen()));
-          } else if (index == 3) {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => DriverProfileScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.map), label: "Map"),
-          BottomNavigationBarItem(icon: Icon(Icons.add_circle), label: "Ride Post"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet), label: "Earnings"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
     );
   }
 
@@ -385,14 +416,14 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 28),
       decoration: BoxDecoration(
-        color: const Color(0xFF11151F),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         children: [
           Text(title,
               style: const TextStyle(
-                  color: Colors.grey, letterSpacing: 2, fontSize: 11)),
+                  color: AppColors.textSecondary, letterSpacing: 2, fontSize: 11)),
           const SizedBox(height: 12),
           Text(value,
               style: const TextStyle(
@@ -415,7 +446,7 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF11151F),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(22),
         ),
         child: Row(
@@ -423,10 +454,10 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.deepPurple.withOpacity(0.2),
+                color: AppColors.primary.withValues(alpha: 0.14),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: Colors.deepPurple),
+              child: Icon(icon, color: AppColors.primary),
             ),
             const SizedBox(width: 18),
             Expanded(
@@ -437,23 +468,6 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget navItem({
-    required IconData icon,
-    required String label,
-    bool selected = false,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: selected ? Colors.deepPurple : Colors.grey),
-        const SizedBox(height: 5),
-        Text(label,
-            style: TextStyle(
-                color: selected ? Colors.deepPurple : Colors.grey, fontSize: 12)),
-      ],
     );
   }
 }

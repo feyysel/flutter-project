@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../services/location_service.dart';
 import '../../services/ride_service.dart';
+import '../../widgets/premium_side_menu.dart';
 
 class DriverHomeScreen extends StatefulWidget {
   @override
@@ -17,7 +18,6 @@ class DriverHomeScreen extends StatefulWidget {
 
 class _DriverHomeScreenState extends State<DriverHomeScreen> {
   bool isOnline = true;
-  int currentIndex = 0;
 
   final MapController mapController = MapController();
   LatLng currentLocation = const LatLng(9.5931, 41.8661);
@@ -27,6 +27,32 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   final _supabase = Supabase.instance.client;
 
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
+
+  static const List<SideMenuItem> _menuItems = [
+    SideMenuItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: "Map"),
+    SideMenuItem(icon: Icons.add_circle_outline, activeIcon: Icons.add_circle, label: "Ride Post"),
+    SideMenuItem(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet, label: "Earnings"),
+    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+  ];
+
+  Widget _menuDestination(int index) {
+    switch (index) {
+      case 1:
+        return DriverRidePostScreen();
+      case 2:
+        return DriverEarningsScreen();
+      case 3:
+        return DriverProfileScreen();
+      default:
+        return DriverHomeScreen();
+    }
+  }
+
+  Future<void> _signOut() async {
+    await _supabase.auth.signOut();
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
 
   Future<void> _persistLocation(LatLng position) async {
     if (_currentUserId.isEmpty) return;
@@ -124,7 +150,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
       for (var data in snapshot) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: Colors.deepPurple,
+            backgroundColor: AppColors.surfaceHigh,
             content: Text(data["title"] ?? ""),
           ),
         );
@@ -185,19 +211,32 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      CircleAvatar(
-                        radius: 18,
-                        backgroundColor: const Color(0xFF11151F),
-                        child: const Icon(Icons.person,
-                            color: Colors.white, size: 20),
+                      Builder(
+                        builder: (menuContext) => GestureDetector(
+                          onTap: () => Scaffold.of(menuContext).openDrawer(),
+                          child: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.18),
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppColors.primary.withValues(alpha: 0.35),
+                              ),
+                            ),
+                            child: const Icon(Icons.menu_rounded,
+                                color: AppColors.accent, size: 22),
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 10),
                       const Text(
                         "DriveOn",
                         style: TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepPurple,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.4,
+                          color: AppColors.primaryVivid,
                         ),
                       ),
                       const Spacer(),
@@ -205,8 +244,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 14, vertical: 10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF050816),
+                          color: AppColors.surface.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppColors.border),
                         ),
                         child: Row(
                           children: [
@@ -214,17 +254,27 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               width: 10,
                               height: 10,
                               decoration: BoxDecoration(
-                                color: isOnline ? Colors.green : Colors.red,
+                                color: isOnline
+                                    ? AppColors.success
+                                    : AppColors.danger,
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: isOnline
+                                        ? AppColors.success
+                                        : AppColors.danger,
+                                    blurRadius: 6,
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 6),
                             Text(
                               isOnline ? "YOU ARE ONLINE" : "YOU ARE OFFLINE",
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: Color.fromARGB(255, 200, 198, 198),
-                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ],
@@ -277,14 +327,22 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 18, vertical: 14),
                           decoration: BoxDecoration(
-                            color: Colors.deepPurple,
+                            gradient: AppGradients.primary,
                             borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.45),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
                           child: Text(
                             isOnline ? "Go Offline" : "Go Online",
                             style: const TextStyle(
                               color: Colors.white,
-                              fontWeight: FontWeight.bold,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ),
@@ -307,8 +365,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                       return Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF050816),
+                          color: AppColors.surface.withValues(alpha: 0.94),
                           borderRadius: BorderRadius.circular(28),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 22,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -318,35 +384,38 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               children: [
                                 const Text("TOTAL EARNINGS",
                                     style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.bold)),
+                                        fontSize: 10.5,
+                                        letterSpacing: 1.6,
+                                        color: AppColors.textMuted,
+                                        fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 8),
                                 Text("$earnings ETB",
                                     style: const TextStyle(
-                                        fontSize: 34,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.deepPurple)),
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -0.5,
+                                        color: AppColors.gold)),
                               ],
                             ),
                             Column(
                               children: [
                                 const Text("TRIPS",
                                     style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
-                                        fontWeight: FontWeight.bold)),
+                                        fontSize: 10.5,
+                                        letterSpacing: 1.6,
+                                        color: AppColors.textMuted,
+                                        fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    const Icon(Icons.directions_car,
-                                        color: Colors.deepPurple),
+                                    const Icon(Icons.directions_car_rounded,
+                                        color: AppColors.primary),
                                     const SizedBox(width: 6),
                                     Text("$trips",
                                         style: const TextStyle(
-                                            fontSize: 34,
-                                            color: Colors.deepPurple,
-                                            fontWeight: FontWeight.bold)),
+                                            fontSize: 32,
+                                            color: AppColors.primaryVivid,
+                                            fontWeight: FontWeight.w800)),
                                   ],
                                 ),
                               ],
@@ -369,22 +438,39 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         margin: const EdgeInsets.all(16),
                         padding: const EdgeInsets.all(25),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF050816),
-                          borderRadius: BorderRadius.circular(35),
+                          color: AppColors.surface.withValues(alpha: 0.94),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 22,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.notifications_none,
-                                size: 60, color: Colors.grey),
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.notifications_none_rounded,
+                                  size: 32, color: AppColors.accent),
+                            ),
                             const SizedBox(height: 15),
                             const Text("No ride requests available",
                                 style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontSize: 18,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w700)),
                             const SizedBox(height: 8),
-                            const Text("Waiting for passenger requests...",
-                                style: TextStyle(color: Colors.grey)),
+                            Text("Waiting for passenger requests...",
+                                style: TextStyle(color: AppColors.textMuted)),
                           ],
                         ),
                       );
@@ -403,22 +489,39 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         margin: const EdgeInsets.all(16),
                         padding: const EdgeInsets.all(25),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF050816),
-                          borderRadius: BorderRadius.circular(35),
+                          color: AppColors.surface.withValues(alpha: 0.94),
+                          borderRadius: BorderRadius.circular(32),
+                          border: Border.all(color: AppColors.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.3),
+                              blurRadius: 22,
+                              offset: const Offset(0, 8),
+                            ),
+                          ],
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.notifications_none,
-                                size: 60, color: Colors.grey),
+                            Container(
+                              width: 64,
+                              height: 64,
+                              decoration: BoxDecoration(
+                                color:
+                                    AppColors.primary.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.notifications_none_rounded,
+                                  size: 32, color: AppColors.accent),
+                            ),
                             const SizedBox(height: 15),
                             const Text("No ride requests available",
                                 style: TextStyle(
-                                    fontSize: 20,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold)),
+                                    fontSize: 18,
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w700)),
                             const SizedBox(height: 8),
-                            const Text("Waiting for passenger requests...",
-                                style: TextStyle(color: Colors.grey)),
+                            Text("Waiting for passenger requests...",
+                                style: TextStyle(color: AppColors.textMuted)),
                           ],
                         ),
                       );
@@ -441,10 +544,12 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                           final firstRequest = rideRequests.first;
 
                           return Card(
-                            color: const Color(0xFF050816),
+                            color: AppColors.surface.withValues(alpha: 0.97),
                             margin: const EdgeInsets.only(bottom: 20),
+                            elevation: 0,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(24),
+                              side: BorderSide(color: AppColors.border),
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(20),
@@ -454,16 +559,25 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                   Text(
                                     "${firstRequest['from']} → ${firstRequest['to']}",
                                     style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.textPrimary,
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.3,
                                     ),
                                   ),
-                                  const SizedBox(height: 10),
-                                  Text(
-                                    "Passengers (${rideRequests.length})",
-                                    style: const TextStyle(
-                                        color: Colors.grey, fontSize: 16),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Icon(Icons.groups_rounded,
+                                          size: 16, color: AppColors.accent),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        "Passengers (${rideRequests.length})",
+                                        style: TextStyle(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 14),
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 15),
                                   ...rideRequests.map((request) {
@@ -483,22 +597,32 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                           Text(
                                             request["passenger_name"] ?? '',
                                             style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18),
+                                                color: AppColors.textPrimary,
+                                                fontWeight: FontWeight.w700,
+                                                fontSize: 17),
                                           ),
                                           const SizedBox(height: 5),
-                                          Text(
-                                            request["passenger_phone"] ?? '',
-                                            style: const TextStyle(
-                                                color: Colors.white70),
+                                          Row(
+                                            children: [
+                                              Icon(Icons.phone_outlined,
+                                                  size: 13,
+                                                  color: AppColors.textMuted),
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                request["passenger_phone"] ?? '',
+                                                style: TextStyle(
+                                                    color:
+                                                        AppColors.textSecondary,
+                                                    fontSize: 13),
+                                              ),
+                                            ],
                                           ),
                                           const SizedBox(height: 10),
                                           Text(
                                             "${request["price"]} ETB",
                                             style: const TextStyle(
-                                                color: Colors.deepPurple,
-                                                fontWeight: FontWeight.bold),
+                                                color: AppColors.gold,
+                                                fontWeight: FontWeight.w800),
                                           ),
                                           const SizedBox(height: 15),
                                           Column(
@@ -507,11 +631,29 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                   "pending")
                                                 SizedBox(
                                                   width: double.infinity,
+                                                  height: 44,
                                                   child: ElevatedButton(
                                                     style: ElevatedButton
                                                         .styleFrom(
                                                       backgroundColor:
-                                                          Colors.grey,
+                                                          AppColors.danger
+                                                              .withValues(
+                                                                  alpha: 0.12),
+                                                      foregroundColor:
+                                                          AppColors.danger,
+                                                      elevation: 0,
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(14),
+                                                        side: BorderSide(
+                                                            color: AppColors
+                                                                .danger
+                                                                .withValues(
+                                                                    alpha:
+                                                                    0.40)),
+                                                      ),
                                                     ),
                                                     onPressed: () async {
                                                       await RideService
@@ -523,17 +665,30 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                           });
                                                     },
                                                     child: const Text(
-                                                        "Decline"),
+                                                        "Decline",
+                                                        style: TextStyle(
+                                                            fontWeight:
+                                                                FontWeight.w700)),
                                                   ),
                                                 ),
                                               const SizedBox(height: 10),
                                               SizedBox(
                                                 width: double.infinity,
+                                                height: 44,
                                                 child: ElevatedButton(
                                                   style: ElevatedButton
                                                       .styleFrom(
                                                     backgroundColor:
-                                                        Colors.deepPurple,
+                                                        AppColors.primary,
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    elevation: 0,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              14),
+                                                    ),
                                                   ),
                                                   onPressed: () async {
                                                     await RideService
@@ -593,11 +748,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                       top: 12),
                                               child: SizedBox(
                                                 width: double.infinity,
+                                                height: 44,
                                                 child: ElevatedButton(
                                                   style: ElevatedButton
                                                       .styleFrom(
                                                     backgroundColor:
-                                                        Colors.green,
+                                                        AppColors.success,
+                                                    foregroundColor:
+                                                        AppColors.background,
+                                                    elevation: 0,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              14),
+                                                    ),
                                                   ),
                                                   onPressed: () async {
                                                     await RideService
@@ -616,6 +781,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                             context)
                                                         .showSnackBar(
                                                       const SnackBar(
+                                                        backgroundColor:
+                                                            AppColors.success,
                                                         content: Text(
                                                             "Ride Completed"),
                                                       ),
@@ -644,70 +811,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: currentIndex,
-        backgroundColor: const Color(0xFF050816),
-        selectedItemColor: Colors.deepPurple,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        elevation: 10,
-        onTap: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-          if (index == 0) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DriverHomeScreen()));
-          } else if (index == 1) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DriverRidePostScreen()));
-          } else if (index == 2) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DriverEarningsScreen()));
-          } else if (index == 3) {
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => DriverProfileScreen()));
-          }
-        },
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle), label: "Ride Post"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet), label: "Earnings"),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-        ],
-      ),
-    );
-  }
-
-  Widget navItem({
-    required IconData icon,
-    required String label,
-    bool selected = false,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: selected ? Colors.deepPurple : Colors.grey),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.deepPurple : Colors.grey,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-          ),
+      drawer: PremiumSideMenu(
+        items: _menuItems,
+        currentIndex: 0,
+        roleLabel: 'Driver',
+        onLogout: _signOut,
+        onItemTap: (index) => PremiumSideMenu.navigateAfterClose(
+          context,
+          _menuDestination(index),
+          isCurrent: index == 0,
         ),
-      ],
+      ),
     );
   }
 }
