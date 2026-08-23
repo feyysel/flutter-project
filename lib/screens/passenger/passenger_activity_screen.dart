@@ -21,9 +21,21 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
   static const List<SideMenuItem> _menuItems = [
-    SideMenuItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: "Home"),
-    SideMenuItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long, label: "Activity"),
-    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+    SideMenuItem(
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home,
+      label: "Home",
+    ),
+    SideMenuItem(
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long,
+      label: "Activity",
+    ),
+    SideMenuItem(
+      icon: Icons.person_outline,
+      activeIcon: Icons.person,
+      label: "Profile",
+    ),
   ];
 
   Widget _menuDestination(int index) {
@@ -60,11 +72,14 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text("Activity",
-            style: TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4)),
+        title: const Text(
+          "Activity",
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.4,
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: AppColors.textPrimary),
@@ -101,7 +116,8 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
               return const EmptyState(
                 icon: Icons.receipt_long_rounded,
                 title: "No ride activity yet",
-                message: "Book your first intercity trip and it will show up here.",
+                message:
+                    "Book your first intercity trip and it will show up here.",
               );
             }
 
@@ -113,8 +129,7 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
               separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, index) {
                 final ride = rides[index];
-                final statusColor =
-                    _statusColor(ride['status'].toString());
+                final statusColor = _statusColor(ride['status'].toString());
 
                 return Container(
                   padding: const EdgeInsets.all(18),
@@ -135,14 +150,19 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
                     children: [
                       Row(
                         children: [
-                          StatusChip(ride['status'].toString(),
-                              color: statusColor),
+                          StatusChip(
+                            ride['status'].toString(),
+                            color: statusColor,
+                          ),
                           const Spacer(),
-                          Text("${ride['price']} ETB",
-                              style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppColors.gold)),
+                          Text(
+                            "${ride['price']} ETB",
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.gold,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 14),
@@ -154,37 +174,60 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(Icons.hourglass_top_rounded,
-                                size: 16, color: AppColors.warning),
+                            const Icon(
+                              Icons.hourglass_top_rounded,
+                              size: 16,
+                              color: AppColors.warning,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                  "Waiting for driver acceptance…",
-                                  style: TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.warning)),
+                                "Waiting for driver acceptance…",
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.warning,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                         const SizedBox(height: 14),
                         _CancelButton(
-                            onRequestCancelled: () =>
-                                RideService.deleteRideRequest(ride['id'])),
+                          onRequestCancelled: () async {
+                            await RideService.deleteRideRequest(ride['id']);
+                            if ((ride['driver_id'] ?? '')
+                                .toString()
+                                .isNotEmpty) {
+                              await RideService.addNotification(
+                                userId: ride['driver_id'],
+                                title: "Ride Request Cancelled",
+                                body:
+                                    "A passenger cancelled their request for ${ride['from']} → ${ride['to']}.",
+                              );
+                            }
+                          },
+                        ),
                       ],
                       if (ride['status'] == "accepted") ...[
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(Icons.check_circle_rounded,
-                                size: 16, color: AppColors.success),
+                            const Icon(
+                              Icons.check_circle_rounded,
+                              size: 16,
+                              color: AppColors.success,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text("Driver accepted your ride",
-                                  style: const TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.success)),
+                              child: Text(
+                                "Driver accepted your ride",
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.success,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -200,17 +243,25 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const MicroLabel("Your driver",
-                                  color: AppColors.accent),
+                              const MicroLabel(
+                                "Your driver",
+                                color: AppColors.accent,
+                              ),
                               const SizedBox(height: 10),
-                              _detailRow(Icons.person_outline_rounded,
-                                  ride['driver_name']),
+                              _detailRow(
+                                Icons.person_outline_rounded,
+                                ride['driver_name'],
+                              ),
                               const SizedBox(height: 8),
-                              _detailRow(Icons.phone_outlined,
-                                  ride['driver_phone']),
+                              _detailRow(
+                                Icons.phone_outlined,
+                                ride['driver_phone'],
+                              ),
                               const SizedBox(height: 8),
-                              _detailRow(Icons.badge_outlined,
-                                  ride['driver_plate']),
+                              _detailRow(
+                                Icons.badge_outlined,
+                                ride['driver_plate'],
+                              ),
                             ],
                           ),
                         ),
@@ -219,15 +270,21 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
                         const SizedBox(height: 14),
                         Row(
                           children: [
-                            const Icon(Icons.verified_rounded,
-                                size: 16, color: AppColors.primaryVivid),
+                            const Icon(
+                              Icons.verified_rounded,
+                              size: 16,
+                              color: AppColors.primaryVivid,
+                            ),
                             const SizedBox(width: 6),
                             Expanded(
-                              child: Text("Ride completed successfully",
-                                  style: const TextStyle(
-                                      fontSize: 12.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primaryVivid)),
+                              child: Text(
+                                "Ride completed successfully",
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.primaryVivid,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -254,7 +311,9 @@ class _PassengerActivityScreenState extends State<PassengerActivityScreen> {
                 ? "—"
                 : value.toString(),
             style: const TextStyle(
-                fontSize: 13.5, color: AppColors.textSecondary),
+              fontSize: 13.5,
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       ],
@@ -274,8 +333,9 @@ class _CancelButton extends StatelessWidget {
         await onRequestCancelled();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              backgroundColor: AppColors.danger,
-              content: Text("Ride request cancelled")),
+            backgroundColor: AppColors.danger,
+            content: Text("Ride request cancelled"),
+          ),
         );
       },
       child: Container(
@@ -289,9 +349,10 @@ class _CancelButton extends StatelessWidget {
         child: const Text(
           "Cancel Request",
           style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: AppColors.danger),
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: AppColors.danger,
+          ),
         ),
       ),
     );

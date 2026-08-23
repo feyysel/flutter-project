@@ -9,6 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../services/location_service.dart';
 import '../../services/ride_service.dart';
+import '../../services/notification_service.dart';
+import '../../widgets/notification_bell.dart';
 import '../../widgets/premium_side_menu.dart';
 
 class DriverHomeScreen extends StatefulWidget {
@@ -30,9 +32,21 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   static const List<SideMenuItem> _menuItems = [
     SideMenuItem(icon: Icons.map_outlined, activeIcon: Icons.map, label: "Map"),
-    SideMenuItem(icon: Icons.add_circle_outline, activeIcon: Icons.add_circle, label: "Ride Post"),
-    SideMenuItem(icon: Icons.account_balance_wallet_outlined, activeIcon: Icons.account_balance_wallet, label: "Earnings"),
-    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+    SideMenuItem(
+      icon: Icons.add_circle_outline,
+      activeIcon: Icons.add_circle,
+      label: "Ride Post",
+    ),
+    SideMenuItem(
+      icon: Icons.account_balance_wallet_outlined,
+      activeIcon: Icons.account_balance_wallet,
+      label: "Earnings",
+    ),
+    SideMenuItem(
+      icon: Icons.person_outline,
+      activeIcon: Icons.person,
+      label: "Profile",
+    ),
   ];
 
   Widget _menuDestination(int index) {
@@ -56,10 +70,10 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
   Future<void> _persistLocation(LatLng position) async {
     if (_currentUserId.isEmpty) return;
-    await _supabase.from('profiles').update({
-      'lat': position.latitude,
-      'lng': position.longitude,
-    }).eq('id', _currentUserId);
+    await _supabase
+        .from('profiles')
+        .update({'lat': position.latitude, 'lng': position.longitude})
+        .eq('id', _currentUserId);
   }
 
   Future<void> _initLocation() async {
@@ -89,11 +103,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
   Stream<Map<String, dynamic>> getDriverStats() async* {
     if (_currentUserId.isEmpty) return;
 
-    await for (final snapshot in _supabase
-        .from('ride_history')
-        .stream(primaryKey: ['id'])
-        .eq('driver_id', _currentUserId)) {
-
+    await for (final snapshot
+        in _supabase
+            .from('ride_history')
+            .stream(primaryKey: ['id'])
+            .eq('driver_id', _currentUserId)) {
       double totalEarnings = 0;
       int totalTrips = snapshot.length;
 
@@ -101,10 +115,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         totalEarnings += double.tryParse(data["price"].toString()) ?? 0;
       }
 
-      yield {
-        "earnings": totalEarnings,
-        "trips": totalTrips,
-      };
+      yield {"earnings": totalEarnings, "trips": totalTrips};
     }
   }
 
@@ -139,6 +150,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
     super.dispose();
   }
 
+  static const Set<String> _seenNotificationIds = <String>{};
+
   void listenNotifications() {
     if (_currentUserId.isEmpty) return;
 
@@ -146,16 +159,37 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
         .from('notifications')
         .stream(primaryKey: ['id'])
         .eq('user_id', _currentUserId)
-        .listen((snapshot) {
-      for (var data in snapshot) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.surfaceHigh,
-            content: Text(data["title"] ?? ""),
-          ),
-        );
-      }
-    });
+        .listen((snapshot) async {
+          final fresh = snapshot
+              .where(
+                (n) =>
+                    n['read'] == false &&
+                    !_seenNotificationIds.contains(n['id']),
+              )
+              .toList();
+
+          for (final n in fresh) {
+            _seenNotificationIds.add(n['id']);
+            if (!mounted) return;
+            NotificationService.showLocal(
+              title: (n['title'] ?? 'DriveOn').toString(),
+              body: (n['body'] ?? '').toString(),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.surfaceHigh,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                content: Text(
+                  "${n['title'] ?? ''} — ${n['body'] ?? ''}",
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+            );
+          }
+        });
   }
 
   @override
@@ -221,11 +255,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               color: AppColors.primary.withValues(alpha: 0.18),
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: AppColors.primary.withValues(alpha: 0.35),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.35,
+                                ),
                               ),
                             ),
-                            child: const Icon(Icons.menu_rounded,
-                                color: AppColors.accent, size: 22),
+                            child: const Icon(
+                              Icons.menu_rounded,
+                              color: AppColors.accent,
+                              size: 22,
+                            ),
                           ),
                         ),
                       ),
@@ -240,9 +279,13 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         ),
                       ),
                       const Spacer(),
+                      const NotificationBell(),
+                      const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 10),
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.surface.withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(18),
@@ -294,13 +337,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                 await LocationService.getCurrentPosition();
                           }
 
-                          await _supabase.from('profiles').update({
-                            'is_online': newStatus,
-                            if (position != null)
-                              'lat': position.latitude,
-                            if (position != null)
-                              'lng': position.longitude,
-                          }).eq('id', _currentUserId);
+                          await _supabase
+                              .from('profiles')
+                              .update({
+                                'is_online': newStatus,
+                                if (position != null) 'lat': position.latitude,
+                                if (position != null) 'lng': position.longitude,
+                              })
+                              .eq('id', _currentUserId);
 
                           final posts = await _supabase
                               .from('posts')
@@ -308,13 +352,16 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               .eq('driver_id', _currentUserId);
 
                           for (var post in posts) {
-                            await _supabase.from('posts').update({
-                              'is_online': newStatus,
-                              if (position != null)
-                                'lat': position.latitude,
-                              if (position != null)
-                                'lng': position.longitude,
-                            }).eq('id', post['id']);
+                            await _supabase
+                                .from('posts')
+                                .update({
+                                  'is_online': newStatus,
+                                  if (position != null)
+                                    'lat': position.latitude,
+                                  if (position != null)
+                                    'lng': position.longitude,
+                                })
+                                .eq('id', post['id']);
                           }
 
                           if (newStatus) {
@@ -325,14 +372,17 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                         },
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 18, vertical: 14),
+                            horizontal: 18,
+                            vertical: 14,
+                          ),
                           decoration: BoxDecoration(
                             gradient: AppGradients.primary,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.45),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.45,
+                                ),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6),
                               ),
@@ -382,40 +432,54 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text("TOTAL EARNINGS",
-                                    style: TextStyle(
-                                        fontSize: 10.5,
-                                        letterSpacing: 1.6,
-                                        color: AppColors.textMuted,
-                                        fontWeight: FontWeight.w700)),
+                                const Text(
+                                  "TOTAL EARNINGS",
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    letterSpacing: 1.6,
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 const SizedBox(height: 8),
-                                Text("$earnings ETB",
-                                    style: const TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.w800,
-                                        letterSpacing: -0.5,
-                                        color: AppColors.gold)),
+                                Text(
+                                  "$earnings ETB",
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: -0.5,
+                                    color: AppColors.gold,
+                                  ),
+                                ),
                               ],
                             ),
                             Column(
                               children: [
-                                const Text("TRIPS",
-                                    style: TextStyle(
-                                        fontSize: 10.5,
-                                        letterSpacing: 1.6,
-                                        color: AppColors.textMuted,
-                                        fontWeight: FontWeight.w700)),
+                                const Text(
+                                  "TRIPS",
+                                  style: TextStyle(
+                                    fontSize: 10.5,
+                                    letterSpacing: 1.6,
+                                    color: AppColors.textMuted,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                                 const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    const Icon(Icons.directions_car_rounded,
-                                        color: AppColors.primary),
+                                    const Icon(
+                                      Icons.directions_car_rounded,
+                                      color: AppColors.primary,
+                                    ),
                                     const SizedBox(width: 6),
-                                    Text("$trips",
-                                        style: const TextStyle(
-                                            fontSize: 32,
-                                            color: AppColors.primaryVivid,
-                                            fontWeight: FontWeight.w800)),
+                                    Text(
+                                      "$trips",
+                                      style: const TextStyle(
+                                        fontSize: 32,
+                                        color: AppColors.primaryVivid,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ],
@@ -455,22 +519,31 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.12,
+                                ),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.notifications_none_rounded,
-                                  size: 32, color: AppColors.accent),
+                              child: Icon(
+                                Icons.notifications_none_rounded,
+                                size: 32,
+                                color: AppColors.accent,
+                              ),
                             ),
                             const SizedBox(height: 15),
-                            const Text("No ride requests available",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700)),
+                            const Text(
+                              "No ride requests available",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            Text("Waiting for passenger requests...",
-                                style: TextStyle(color: AppColors.textMuted)),
+                            Text(
+                              "Waiting for passenger requests...",
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
                           ],
                         ),
                       );
@@ -478,9 +551,11 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
 
                     final requests = snapshot.data!;
                     final pendingAccepted = requests
-                        .where((r) =>
-                            r['status'] == 'pending' ||
-                            r['status'] == 'accepted')
+                        .where(
+                          (r) =>
+                              r['status'] == 'pending' ||
+                              r['status'] == 'accepted',
+                        )
                         .toList();
 
                     if (pendingAccepted.isEmpty) {
@@ -506,28 +581,38 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color:
-                                    AppColors.primary.withValues(alpha: 0.12),
+                                color: AppColors.primary.withValues(
+                                  alpha: 0.12,
+                                ),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(Icons.notifications_none_rounded,
-                                  size: 32, color: AppColors.accent),
+                              child: Icon(
+                                Icons.notifications_none_rounded,
+                                size: 32,
+                                color: AppColors.accent,
+                              ),
                             ),
                             const SizedBox(height: 15),
-                            const Text("No ride requests available",
-                                style: TextStyle(
-                                    fontSize: 18,
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.w700)),
+                            const Text(
+                              "No ride requests available",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: AppColors.textPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             const SizedBox(height: 8),
-                            Text("Waiting for passenger requests...",
-                                style: TextStyle(color: AppColors.textMuted)),
+                            Text(
+                              "Waiting for passenger requests...",
+                              style: TextStyle(color: AppColors.textMuted),
+                            ),
                           ],
                         ),
                       );
                     }
 
-                    Map<String, List<Map<String, dynamic>>> groupedRequests = {};
+                    Map<String, List<Map<String, dynamic>>> groupedRequests =
+                        {};
                     for (var request in pendingAccepted) {
                       final rideId = request['ride_id'];
                       if (!groupedRequests.containsKey(rideId)) {
@@ -568,27 +653,29 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                   const SizedBox(height: 8),
                                   Row(
                                     children: [
-                                      Icon(Icons.groups_rounded,
-                                          size: 16, color: AppColors.accent),
+                                      Icon(
+                                        Icons.groups_rounded,
+                                        size: 16,
+                                        color: AppColors.accent,
+                                      ),
                                       const SizedBox(width: 6),
                                       Text(
                                         "Passengers (${rideRequests.length})",
                                         style: TextStyle(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 14),
+                                          color: AppColors.textSecondary,
+                                          fontSize: 14,
+                                        ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 15),
                                   ...rideRequests.map((request) {
                                     return Container(
-                                      margin:
-                                          const EdgeInsets.only(bottom: 15),
+                                      margin: const EdgeInsets.only(bottom: 15),
                                       padding: const EdgeInsets.all(15),
                                       decoration: BoxDecoration(
                                         color: const Color(0xFF11151F),
-                                        borderRadius:
-                                            BorderRadius.circular(15),
+                                        borderRadius: BorderRadius.circular(15),
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
@@ -597,23 +684,28 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                           Text(
                                             request["passenger_name"] ?? '',
                                             style: const TextStyle(
-                                                color: AppColors.textPrimary,
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 17),
+                                              color: AppColors.textPrimary,
+                                              fontWeight: FontWeight.w700,
+                                              fontSize: 17,
+                                            ),
                                           ),
                                           const SizedBox(height: 5),
                                           Row(
                                             children: [
-                                              Icon(Icons.phone_outlined,
-                                                  size: 13,
-                                                  color: AppColors.textMuted),
+                                              Icon(
+                                                Icons.phone_outlined,
+                                                size: 13,
+                                                color: AppColors.textMuted,
+                                              ),
                                               const SizedBox(width: 5),
                                               Text(
-                                                request["passenger_phone"] ?? '',
+                                                request["passenger_phone"] ??
+                                                    '',
                                                 style: TextStyle(
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                    fontSize: 13),
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                  fontSize: 13,
+                                                ),
                                               ),
                                             ],
                                           ),
@@ -621,8 +713,9 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                           Text(
                                             "${request["price"]} ETB",
                                             style: const TextStyle(
-                                                color: AppColors.gold,
-                                                fontWeight: FontWeight.w800),
+                                              color: AppColors.gold,
+                                              fontWeight: FontWeight.w800,
+                                            ),
                                           ),
                                           const SizedBox(height: 15),
                                           Column(
@@ -633,42 +726,50 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                   width: double.infinity,
                                                   height: 44,
                                                   child: ElevatedButton(
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor:
-                                                          AppColors.danger
-                                                              .withValues(
-                                                                  alpha: 0.12),
+                                                    style: ElevatedButton.styleFrom(
+                                                      backgroundColor: AppColors
+                                                          .danger
+                                                          .withValues(
+                                                            alpha: 0.12,
+                                                          ),
                                                       foregroundColor:
                                                           AppColors.danger,
                                                       elevation: 0,
-                                                      shape:
-                                                          RoundedRectangleBorder(
+                                                      shape: RoundedRectangleBorder(
                                                         borderRadius:
-                                                            BorderRadius
-                                                                .circular(14),
+                                                            BorderRadius.circular(
+                                                              14,
+                                                            ),
                                                         side: BorderSide(
-                                                            color: AppColors
-                                                                .danger
-                                                                .withValues(
-                                                                    alpha:
-                                                                    0.40)),
+                                                          color: AppColors
+                                                              .danger
+                                                              .withValues(
+                                                                alpha: 0.40,
+                                                              ),
+                                                        ),
                                                       ),
                                                     ),
                                                     onPressed: () async {
-                                                      await RideService
-                                                          .updateRideRequest(
-                                                              request['id'],
-                                                              {
-                                                            'status':
-                                                                'declined',
-                                                          });
+                                                      await RideService.updateRideRequest(
+                                                        request['id'],
+                                                        {'status': 'declined'},
+                                                      );
+
+                                                      await RideService.addNotification(
+                                                        userId:
+                                                            request['passenger_id'],
+                                                        title: "Ride Declined",
+                                                        body:
+                                                            "${request['driver_name'] ?? 'The driver'} can't take this ride. Try booking another one.",
+                                                      );
                                                     },
                                                     child: const Text(
-                                                        "Decline",
-                                                        style: TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.w700)),
+                                                      "Decline",
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
+                                                    ),
                                                   ),
                                                 ),
                                               const SizedBox(height: 10),
@@ -676,43 +777,45 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                 width: double.infinity,
                                                 height: 44,
                                                 child: ElevatedButton(
-                                                  style: ElevatedButton
-                                                      .styleFrom(
+                                                  style: ElevatedButton.styleFrom(
                                                     backgroundColor:
                                                         AppColors.primary,
                                                     foregroundColor:
                                                         Colors.white,
                                                     elevation: 0,
-                                                    shape:
-                                                        RoundedRectangleBorder(
+                                                    shape: RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              14),
+                                                            14,
+                                                          ),
                                                     ),
                                                   ),
                                                   onPressed: () async {
-                                                    await RideService
-                                                        .updateRideRequest(
-                                                            request['id'], {
-                                                      'status': 'accepted',
-                                                    });
+                                                    await RideService.updateRideRequest(
+                                                      request['id'],
+                                                      {'status': 'accepted'},
+                                                    );
 
                                                     await _supabase
                                                         .from('posts')
                                                         .update({
-                                                      'available_seats':
-                                                          request['available_seats'] -
+                                                          'available_seats':
+                                                              request['available_seats'] -
                                                               1,
-                                                    }).eq('id',
-                                                            request['ride_id']);
+                                                        })
+                                                        .eq(
+                                                          'id',
+                                                          request['ride_id'],
+                                                        );
 
-                                                    final ride =
-                                                        await _supabase
-                                                            .from('posts')
-                                                            .select()
-                                                            .eq('id',
-                                                                request['ride_id'])
-                                                            .maybeSingle();
+                                                    final ride = await _supabase
+                                                        .from('posts')
+                                                        .select()
+                                                        .eq(
+                                                          'id',
+                                                          request['ride_id'],
+                                                        )
+                                                        .maybeSingle();
 
                                                     if (ride != null &&
                                                         (ride['available_seats'] ??
@@ -721,17 +824,18 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                                       await _supabase
                                                           .from('posts')
                                                           .update({
-                                                        'is_full': true,
-                                                      }).eq('id',
-                                                              request['ride_id']);
+                                                            'is_full': true,
+                                                          })
+                                                          .eq(
+                                                            'id',
+                                                            request['ride_id'],
+                                                          );
                                                     }
 
-                                                    await RideService
-                                                        .addNotification(
-                                                      userId: request[
-                                                          'passenger_id'],
-                                                      title:
-                                                          "Ride Accepted",
+                                                    await RideService.addNotification(
+                                                      userId:
+                                                          request['passenger_id'],
+                                                      title: "Ride Accepted",
                                                       body:
                                                           "Driver accepted your ride",
                                                     );
@@ -743,53 +847,62 @@ class _DriverHomeScreenState extends State<DriverHomeScreen> {
                                           ),
                                           if (request["status"] == "accepted")
                                             Padding(
-                                              padding:
-                                                  const EdgeInsets.only(
-                                                      top: 12),
+                                              padding: const EdgeInsets.only(
+                                                top: 12,
+                                              ),
                                               child: SizedBox(
                                                 width: double.infinity,
                                                 height: 44,
                                                 child: ElevatedButton(
-                                                  style: ElevatedButton
-                                                      .styleFrom(
+                                                  style: ElevatedButton.styleFrom(
                                                     backgroundColor:
                                                         AppColors.success,
                                                     foregroundColor:
                                                         AppColors.background,
                                                     elevation: 0,
-                                                    shape:
-                                                        RoundedRectangleBorder(
+                                                    shape: RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              14),
+                                                            14,
+                                                          ),
                                                     ),
                                                   ),
                                                   onPressed: () async {
-                                                    await RideService
-                                                        .updateRideRequest(
-                                                            request['id'], {
-                                                      'status': 'completed',
-                                                    });
+                                                    await RideService.updateRideRequest(
+                                                      request['id'],
+                                                      {'status': 'completed'},
+                                                    );
 
-                                                    await RideService
-                                                        .addRideHistory({
-                                                      ...request,
-                                                      'status': 'completed',
-                                                    });
+                                                    await RideService.addRideHistory(
+                                                      {
+                                                        ...request,
+                                                        'status': 'completed',
+                                                      },
+                                                    );
+
+                                                    await RideService.addNotification(
+                                                      userId:
+                                                          request['passenger_id'],
+                                                      title: "Ride Completed",
+                                                      body:
+                                                          "Your ride with ${request['driver_name'] ?? 'the driver'} is complete. Thanks for riding with DriveOn!",
+                                                    );
 
                                                     ScaffoldMessenger.of(
-                                                            context)
-                                                        .showSnackBar(
+                                                      context,
+                                                    ).showSnackBar(
                                                       const SnackBar(
                                                         backgroundColor:
                                                             AppColors.success,
                                                         content: Text(
-                                                            "Ride Completed"),
+                                                          "Ride Completed",
+                                                        ),
                                                       ),
                                                     );
                                                   },
                                                   child: const Text(
-                                                      "Complete Ride"),
+                                                    "Complete Ride",
+                                                  ),
                                                 ),
                                               ),
                                             ),

@@ -35,10 +35,7 @@ class AuthService {
       final response = await _client.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'name': name.trim(),
-          'phone': phone.trim(),
-        },
+        data: {'name': name.trim(), 'phone': phone.trim()},
       );
 
       if (response.user == null) {
@@ -47,14 +44,17 @@ class AuthService {
 
       // The database trigger auto-creates the profile row.
       // Update it to set role and other fields the trigger doesn't handle.
-      await _client.from('profiles').update({
-        'name': name.trim(),
-        'phone': phone.trim(),
-        'role': role,
-        'is_verified': false,
-        'verification_status': 'none',
-        'is_online': false,
-      }).eq('id', response.user!.id);
+      await _client
+          .from('profiles')
+          .update({
+            'name': name.trim(),
+            'phone': phone.trim(),
+            'role': role,
+            'is_verified': false,
+            'verification_status': 'none',
+            'is_online': false,
+          })
+          .eq('id', response.user!.id);
 
       return "success";
     } on AuthException catch (e) {
@@ -119,7 +119,10 @@ class AuthService {
     return await _client.from('profiles').select().eq('id', uid).maybeSingle();
   }
 
-  static Future<void> updateUserProfile(String uid, Map<String, dynamic> data) async {
+  static Future<void> updateUserProfile(
+    String uid,
+    Map<String, dynamic> data,
+  ) async {
     await _client.from('profiles').update(data).eq('id', uid);
   }
 }

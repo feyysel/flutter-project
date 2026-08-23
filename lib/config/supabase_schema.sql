@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   name TEXT NOT NULL DEFAULT '',
   phone TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT 'passenger' CHECK (role IN ('driver', 'passenger')),
+  is_admin BOOLEAN DEFAULT FALSE,
   is_verified BOOLEAN DEFAULT FALSE,
   verification_status TEXT DEFAULT 'none' CHECK (verification_status IN ('none', 'under_review', 'verified', 'rejected')),
   is_online BOOLEAN DEFAULT FALSE,
@@ -22,6 +23,9 @@ CREATE TABLE IF NOT EXISTS profiles (
   id_back_url TEXT,
   license_url TEXT,
   car_photo_url TEXT,
+  rejection_reason TEXT,
+  rejected_documents TEXT[] DEFAULT '{}',
+  updated_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -122,6 +126,53 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 -- ========================
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS pickup_location TEXT;
 ALTER TABLE posts ADD COLUMN IF NOT EXISTS drop_location TEXT;
+
+-- ========================
+-- MIGRATION: driver verification rejection details
+-- Run this once in the Supabase SQL editor if your table already exists
+-- ========================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS rejected_documents TEXT[] DEFAULT '{}';
+
+-- ========================
+-- MIGRATION: notification read state
+-- Run this once in the Supabase SQL editor if your table already exists
+-- ========================
+CREATE POLICY "Users can update own notifications"
+  ON notifications FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+-- ========================
+-- MIGRATION: admin access
+-- Run this once in the Supabase SQL editor if your table already exists,
+-- then flag your admin account:
+--   UPDATE profiles SET is_admin = TRUE WHERE phone = '<ADMIN_PHONE>';
+-- ========================
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_admin BOOLEAN DEFAULT FALSE;
+
+CREATE POLICY "Admins can update any profile"
+  ON profiles FOR UPDATE
+  TO authenticated
+  USING (
+    id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM profiles a
+      WHERE a.id = auth.uid() AND a.is_admin = TRUE
+    )
+  )
+  WITH CHECK (true);
+
+CREATE POLICY "Admins can delete any profile"
+  ON profiles FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM profiles a
+      WHERE a.id = auth.uid() AND a.is_admin = TRUE
+    )
+  );
 
 -- ========================
 -- ROW LEVEL SECURITY (RLS)

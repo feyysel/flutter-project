@@ -7,6 +7,8 @@ import 'passenger_activity_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../services/location_service.dart';
+import '../../services/notification_service.dart';
+import '../../widgets/notification_bell.dart';
 import '../../widgets/premium_side_menu.dart';
 import '../../widgets/premium_ui.dart';
 
@@ -32,9 +34,21 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
       .eq('is_online', true);
 
   static const List<SideMenuItem> _menuItems = [
-    SideMenuItem(icon: Icons.home_outlined, activeIcon: Icons.home, label: "Home"),
-    SideMenuItem(icon: Icons.receipt_long_outlined, activeIcon: Icons.receipt_long, label: "Activity"),
-    SideMenuItem(icon: Icons.person_outline, activeIcon: Icons.person, label: "Profile"),
+    SideMenuItem(
+      icon: Icons.home_outlined,
+      activeIcon: Icons.home,
+      label: "Home",
+    ),
+    SideMenuItem(
+      icon: Icons.receipt_long_outlined,
+      activeIcon: Icons.receipt_long,
+      label: "Activity",
+    ),
+    SideMenuItem(
+      icon: Icons.person_outline,
+      activeIcon: Icons.person,
+      label: "Profile",
+    ),
   ];
 
   Widget _menuDestination(int index) {
@@ -87,18 +101,40 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         .from('notifications')
         .stream(primaryKey: ['id'])
         .eq('user_id', _currentUserId)
-        .listen((snapshot) {
-      for (var data in snapshot) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: AppColors.surfaceHigh,
-            content: Text(data["title"] ?? ""),
-          ),
-        );
-      }
-    });
+        .listen((snapshot) async {
+          final fresh = snapshot
+              .where(
+                (n) =>
+                    n['read'] == false &&
+                    !_seenNotificationIds.contains(n['id']),
+              )
+              .toList();
+
+          for (final n in fresh) {
+            _seenNotificationIds.add(n['id']);
+            if (!mounted) return;
+            NotificationService.showLocal(
+              title: (n['title'] ?? 'DriveOn').toString(),
+              body: (n['body'] ?? '').toString(),
+            );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                backgroundColor: AppColors.surfaceHigh,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                content: Text(
+                  "${n['title'] ?? ''} — ${n['body'] ?? ''}",
+                  style: const TextStyle(color: AppColors.textPrimary),
+                ),
+              ),
+            );
+          }
+        });
   }
+
+  static const Set<String> _seenNotificationIds = <String>{};
 
   @override
   Widget build(BuildContext context) {
@@ -210,11 +246,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
             ),
           ),
 
-          Positioned(
-            right: 20,
-            bottom: 132,
-            child: _buildRecenterButton(),
-          ),
+          Positioned(right: 20, bottom: 132, child: _buildRecenterButton()),
         ],
       ),
     );
@@ -241,8 +273,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   ),
                 ],
               ),
-              child: const Icon(Icons.menu_rounded,
-                  color: AppColors.textPrimary, size: 22),
+              child: const Icon(
+                Icons.menu_rounded,
+                color: AppColors.textPrimary,
+                size: 22,
+              ),
             ),
           ),
         ),
@@ -261,8 +296,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
               ),
             ],
           ),
-          child: const Icon(Icons.directions_car_rounded,
-              color: Colors.white, size: 21),
+          child: const Icon(
+            Icons.directions_car_rounded,
+            color: Colors.white,
+            size: 21,
+          ),
         ),
         const SizedBox(width: 10),
         const Text(
@@ -275,6 +313,8 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
           ),
         ),
         const Spacer(),
+        const NotificationBell(),
+        const SizedBox(width: 12),
         _buildOnlineDriversChip(),
       ],
     );
@@ -327,10 +367,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   Widget _buildBookingCard() {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          SlideUpRoute(page: RideListScreen()),
-        );
+        Navigator.push(context, SlideUpRoute(page: RideListScreen()));
       },
       child: Container(
         padding: const EdgeInsets.all(14),
@@ -367,8 +404,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   ),
                 ],
               ),
-              child: const Icon(Icons.search_rounded,
-                  color: Colors.white, size: 26),
+              child: const Icon(
+                Icons.search_rounded,
+                color: Colors.white,
+                size: 26,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -378,9 +418,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                   const MicroLabel('Plan your ride', color: AppColors.accent),
                   const SizedBox(height: 5),
                   Text(
-                    destination.isEmpty
-                        ? "Where are you going?"
-                        : destination,
+                    destination.isEmpty ? "Where are you going?" : destination,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -401,8 +439,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Icon(Icons.arrow_forward_rounded,
-                  color: AppColors.accent, size: 20),
+              child: const Icon(
+                Icons.arrow_forward_rounded,
+                color: AppColors.accent,
+                size: 20,
+              ),
             ),
           ],
         ),
@@ -432,8 +473,11 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
         child: InkWell(
           customBorder: const CircleBorder(),
           onTap: () => mapController.move(currentLocation, 15),
-          child: const Icon(Icons.my_location_rounded,
-              color: AppColors.accent, size: 22),
+          child: const Icon(
+            Icons.my_location_rounded,
+            color: AppColors.accent,
+            size: 22,
+          ),
         ),
       ),
     );
@@ -482,8 +526,10 @@ class _PulseDotState extends State<_PulseDot>
       vsync: this,
       duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
-    _opacity = Tween(begin: 0.35, end: 1.0)
-        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+    _opacity = Tween(
+      begin: 0.35,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -503,11 +549,7 @@ class _PulseDotState extends State<_PulseDot>
           color: AppColors.success,
           shape: BoxShape.circle,
           boxShadow: [
-            BoxShadow(
-              color: AppColors.success,
-              blurRadius: 6,
-              spreadRadius: 1,
-            ),
+            BoxShadow(color: AppColors.success, blurRadius: 6, spreadRadius: 1),
           ],
         ),
       ),
