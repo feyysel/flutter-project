@@ -52,34 +52,45 @@ class _RideListScreenState extends State<RideListScreen> {
                 ),
               ),
               const SizedBox(height: 22),
-              const Text("Confirm your ride",
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary)),
+              const Text(
+                "Confirm your ride",
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
               const SizedBox(height: 24),
               RoutePoints(
                 from: posts['from'] ?? '',
                 to: posts['to'] ?? '',
                 textStyle: const TextStyle(
-                    fontSize: 18, fontWeight: FontWeight.w700),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               if ((posts['pickup_location'] ?? '').toString().isNotEmpty ||
                   (posts['drop_location'] ?? '').toString().isNotEmpty) ...[
                 const SizedBox(height: 18),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.25)),
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.alt_route_rounded,
-                          size: 17, color: AppColors.accent),
+                      const Icon(
+                        Icons.alt_route_rounded,
+                        size: 17,
+                        color: AppColors.accent,
+                      ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
@@ -96,8 +107,9 @@ class _RideListScreenState extends State<RideListScreen> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                              fontSize: 12.5,
-                              color: AppColors.textSecondary),
+                            fontSize: 12.5,
+                            color: AppColors.textSecondary,
+                          ),
                         ),
                       ),
                     ],
@@ -115,27 +127,33 @@ class _RideListScreenState extends State<RideListScreen> {
                 child: Row(
                   children: [
                     const GradientIconTile(
-                        icon: Icons.directions_car_rounded,
-                        size: 50,
-                        iconSize: 26),
+                      icon: Icons.directions_car_rounded,
+                      size: 50,
+                      iconSize: 26,
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(posts['vehicle_model'] ?? "Economy",
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                  color: AppColors.textPrimary)),
+                          Text(
+                            posts['vehicle_model'] ?? "Economy",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 17,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                           const SizedBox(height: 4),
                           Text(
-                              "${posts['driver_name'] ?? 'Driver'} • ${posts['time'] ?? 'Now'} • ${posts['seats'] ?? '4'} seats",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary)),
+                            "${posts['driver_name'] ?? 'Driver'} • ${posts['time'] ?? 'Now'} • ${posts['seats'] ?? '4'} seats",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -143,15 +161,21 @@ class _RideListScreenState extends State<RideListScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text("${posts['price']} ETB",
-                            style: const TextStyle(
-                                color: AppColors.gold,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w800)),
-                        const Text("Est. Price",
-                            style: TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textMuted)),
+                        Text(
+                          "${posts['price']} ETB",
+                          style: const TextStyle(
+                            color: AppColors.gold,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const Text(
+                          "Est. Price",
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textMuted,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -219,121 +243,136 @@ class _RideListScreenState extends State<RideListScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-          backgroundColor: AppColors.success,
-          content: Text("Ride request sent")),
+        backgroundColor: AppColors.success,
+        content: Text("Ride request sent"),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SheetPage(
-        child: SafeArea(
-          top: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const MicroLabel('Plan your ride',
-                              color: AppColors.accent),
-                          const SizedBox(height: 5),
-                          const Text("Choose your ride",
+    return Material(
+      type: MaterialType.transparency,
+      child: Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SheetPage(
+          child: SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 14, 20, 0),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const MicroLabel(
+                              'Plan your ride',
+                              color: AppColors.accent,
+                            ),
+                            const SizedBox(height: 5),
+                            const Text(
+                              "Choose your ride",
                               style: TextStyle(
-                                  fontSize: 23,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: -0.4,
-                                  color: AppColors.textPrimary)),
-                        ],
+                                fontSize: 23,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.4,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    GlassCircleButton(
-                      icon: Icons.close_rounded,
-                      onTap: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
-                child: TextField(
-                  controller: searchController,
-                  style: const TextStyle(color: AppColors.textPrimary),
-                  onChanged: (value) =>
-                      setState(() => searchQuery = value.toLowerCase()),
-                  decoration: InputDecoration(
-                    hintText: "Search destination...",
-                    hintStyle:
-                        const TextStyle(color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.location_on_rounded,
-                        color: AppColors.primary),
-                    suffixIcon: searchQuery.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.close_rounded,
-                                color: AppColors.textSecondary),
-                            onPressed: () {
-                              searchController.clear();
-                              setState(() => searchQuery = "");
-                            },
-                          ),
+                      GlassCircleButton(
+                        icon: Icons.close_rounded,
+                        onTap: () => Navigator.pop(context),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              Expanded(
-                child: StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: RideService.getRides(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return const EmptyState(
-                        icon: Icons.directions_car_rounded,
-                        title: "No rides available",
-                        message: "Check back soon — drivers are posting new intercity trips.",
-                      );
-                    }
-
-                    final rides = snapshot.data!;
-                    final filteredRides = rides.where((posts) {
-                      final from = posts['from'].toString().toLowerCase();
-                      final to = posts['to'].toString().toLowerCase();
-                      return from.contains(searchQuery) ||
-                          to.contains(searchQuery);
-                    }).toList();
-
-                    if (filteredRides.isEmpty) {
-                      return const EmptyState(
-                        icon: Icons.search_off_rounded,
-                        title: "No matching rides",
-                        message: "Try a different city or clear your search.",
-                      );
-                    }
-
-                    return ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 10),
-                      itemCount: filteredRides.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 14),
-                      itemBuilder: (context, index) =>
-                          _RideCard(
-                            posts: filteredRides[index],
-                            onBook: () =>
-                                showRideConfirmation(filteredRides[index]),
-                          ),
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 6),
+                  child: TextField(
+                    controller: searchController,
+                    style: const TextStyle(color: AppColors.textPrimary),
+                    onChanged: (value) =>
+                        setState(() => searchQuery = value.toLowerCase()),
+                    decoration: InputDecoration(
+                      hintText: "Search destination...",
+                      hintStyle: const TextStyle(color: AppColors.textMuted),
+                      prefixIcon: const Icon(
+                        Icons.location_on_rounded,
+                        color: AppColors.primary,
+                      ),
+                      suffixIcon: searchQuery.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(
+                                Icons.close_rounded,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: () {
+                                searchController.clear();
+                                setState(() => searchQuery = "");
+                              },
+                            ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                Expanded(
+                  child: StreamBuilder<List<Map<String, dynamic>>>(
+                    stream: RideService.getRides(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const EmptyState(
+                          icon: Icons.directions_car_rounded,
+                          title: "No rides available",
+                          message:
+                              "Check back soon — drivers are posting new intercity trips.",
+                        );
+                      }
+
+                      final rides = snapshot.data!;
+                      final filteredRides = rides.where((posts) {
+                        final from = posts['from'].toString().toLowerCase();
+                        final to = posts['to'].toString().toLowerCase();
+                        return from.contains(searchQuery) ||
+                            to.contains(searchQuery);
+                      }).toList();
+
+                      if (filteredRides.isEmpty) {
+                        return const EmptyState(
+                          icon: Icons.search_off_rounded,
+                          title: "No matching rides",
+                          message: "Try a different city or clear your search.",
+                        );
+                      }
+
+                      return ListView.separated(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        itemCount: filteredRides.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) => _RideCard(
+                          posts: filteredRides[index],
+                          onBook: () =>
+                              showRideConfirmation(filteredRides[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -382,9 +421,12 @@ class _RideCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    StatusChip(_isOnline ? "Online" : "Offline",
-                        color:
-                            _isOnline ? AppColors.success : AppColors.textMuted),
+                    StatusChip(
+                      _isOnline ? "Online" : "Offline",
+                      color: _isOnline
+                          ? AppColors.success
+                          : AppColors.textMuted,
+                    ),
                     if (_isFull) ...[
                       const SizedBox(width: 8),
                       const StatusChip("Full", color: AppColors.danger),
@@ -392,27 +434,36 @@ class _RideCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                Text("${posts['from']} → ${posts['to']}",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        fontSize: 15.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary)),
+                Text(
+                  "${posts['from']} → ${posts['to']}",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 const SizedBox(height: 7),
                 Row(
                   children: [
-                    const Icon(Icons.access_time_rounded,
-                        size: 15, color: AppColors.textMuted),
+                    const Icon(
+                      Icons.access_time_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: Text(posts['time'] ?? 'Now',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary)),
+                      child: Text(
+                        posts['time'] ?? 'Now',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                     if ((posts['pickup_location'] ?? '')
                             .toString()
@@ -427,27 +478,37 @@ class _RideCard extends StatelessWidget {
                 const SizedBox(height: 7),
                 Row(
                   children: [
-                    const Icon(Icons.person_outline_rounded,
-                        size: 15, color: AppColors.textMuted),
+                    const Icon(
+                      Icons.person_outline_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
                     const SizedBox(width: 4),
                     Flexible(
-                      child: Text(posts['driver_name'] ?? "Driver",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              fontSize: 13,
-                              color: AppColors.textSecondary)),
+                      child: Text(
+                        posts['driver_name'] ?? "Driver",
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 10),
-                    const Icon(Icons.event_seat_rounded,
-                        size: 15, color: AppColors.textMuted),
+                    const Icon(
+                      Icons.event_seat_rounded,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       "${posts['available_seats'] ?? 0}/${posts['total_seats'] ?? posts['seats'] ?? 0}",
                       style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textSecondary),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -458,11 +519,14 @@ class _RideCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text("${posts['price']} ETB",
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.gold,
-                      fontSize: 17)),
+              Text(
+                "${posts['price']} ETB",
+                style: const TextStyle(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.gold,
+                  fontSize: 17,
+                ),
+              ),
               const SizedBox(height: 10),
               GestureDetector(
                 onTap: canBook ? onBook : null,
@@ -489,9 +553,7 @@ class _RideCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: canBook
-                          ? Colors.white
-                          : AppColors.textMuted,
+                      color: canBook ? Colors.white : AppColors.textMuted,
                     ),
                   ),
                 ),
@@ -540,11 +602,14 @@ class PremiumSheetButton extends StatelessWidget {
           borderRadius: radius,
           onTap: onPressed,
           child: Center(
-            child: Text(label,
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
       ),
