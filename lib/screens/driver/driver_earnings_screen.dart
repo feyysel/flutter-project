@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'driver_profile_screen.dart';
 import 'driver_ride_post_screen.dart';
 import 'driver_home_screen.dart';
+import '../../services/ride_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/premium_side_menu.dart';
 import '../../widgets/premium_ui.dart';
@@ -79,10 +80,7 @@ class _DriverEarningsScreenState extends State<DriverEarningsScreen> {
       ),
       body: PremiumBackground(
         child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: _supabase
-              .from('ride_history')
-              .stream(primaryKey: ['id'])
-              .eq('driver_id', _currentUserId),
+          stream: RideService.getRideHistory(_currentUserId, field: 'driver_id'),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());

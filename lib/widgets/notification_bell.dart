@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/live_query.dart';
 import '../theme/app_theme.dart';
 import '../screens/common/notifications_screen.dart';
 
@@ -18,14 +19,14 @@ class _NotificationBellState extends State<NotificationBell> {
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
   Stream<List<Map<String, dynamic>>> get _unreadStream {
-    final query = _supabase
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('read', false);
-    if (_currentUserId.isNotEmpty) {
-      return query.eq('user_id', _currentUserId);
-    }
-    return query;
+    return LiveQuery.watch(
+      table: 'notifications',
+      eq1Column: 'user_id',
+      eq1Value: _currentUserId,
+      eq2Column: 'read',
+      eq2Value: false,
+      interval: const Duration(seconds: 6),
+    );
   }
 
   @override

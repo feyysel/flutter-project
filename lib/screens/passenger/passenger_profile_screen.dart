@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'passenger_activity_screen.dart';
 import 'passenger_history_screen.dart';
 import 'passenger_home_screen.dart';
+import '../../services/ride_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/premium_side_menu.dart';
 
@@ -234,10 +235,9 @@ class _PassengerProfileScreenState extends State<PassengerProfileScreen> {
                     children: [
                       Expanded(
                         child: StreamBuilder<List<Map<String, dynamic>>>(
-                          stream: _supabase
-                              .from('ride_history')
-                              .stream(primaryKey: ['id'])
-                              .eq('passenger_id', _currentUserId),
+                          stream: RideService.getRideHistory(
+                              _currentUserId,
+                              field: 'passenger_id'),
                           builder: (context, tripSnapshot) {
                             final trips = tripSnapshot.data?.length ?? 0;
                             return _StatCard(

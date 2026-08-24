@@ -7,7 +7,10 @@ import 'passenger_activity_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../theme/app_theme.dart';
 import '../../services/location_service.dart';
+import '../../services/live_query.dart';
 import '../../services/notification_service.dart';
+import '../../services/passenger_location_sharer.dart';
+import '../../services/ride_service.dart';
 import '../../widgets/notification_bell.dart';
 import '../../widgets/premium_side_menu.dart';
 import '../../widgets/premium_ui.dart';
@@ -28,10 +31,13 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
 
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
 
-  Stream<List<Map<String, dynamic>>> get _onlineDriversStream => _supabase
-      .from('profiles')
-      .stream(primaryKey: ['id'])
-      .eq('is_online', true);
+  Stream<List<Map<String, dynamic>>> get _onlineDriversStream =>
+      LiveQuery.watch(
+        table: 'profiles',
+        eq1Column: 'is_online',
+        eq1Value: true,
+        interval: const Duration(seconds: 10),
+      );
 
   static const List<SideMenuItem> _menuItems = [
     SideMenuItem(
@@ -73,6 +79,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
     super.initState();
     listenNotifications();
     _initLocation();
+    PassengerLocationSharer.start();
   }
 
   Future<void> _initLocation() async {
@@ -97,11 +104,7 @@ class _PassengerHomeScreenState extends State<PassengerHomeScreen> {
   void listenNotifications() {
     if (_currentUserId.isEmpty) return;
 
-    _supabase
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _currentUserId)
-        .listen((snapshot) async {
+    RideService.getNotifications(_currentUserId).listen((snapshot) async {
           final fresh = snapshot
               .where(
                 (n) =>

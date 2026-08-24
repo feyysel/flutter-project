@@ -144,6 +144,14 @@ class _DriverRidePostScreenState extends State<DriverRidePostScreen> {
 
     setState(() => isLoading = true);
 
+    final departureAt = DateTime(
+      selectedDate!.year,
+      selectedDate!.month,
+      selectedDate!.day,
+      selectedTime!.hour,
+      selectedTime!.minute,
+    );
+
     await RideService.addRide(
       from: fromController.text,
       to: toController.text,
@@ -153,6 +161,7 @@ class _DriverRidePostScreenState extends State<DriverRidePostScreen> {
       driverName: driverDoc?['name'] ?? '',
       vehicleModel: driverDoc?['vehicle_model'] ?? 'Economy',
       seats: int.parse(seatsController.text),
+      departureAt: departureAt,
       pickupLocation: pickupController.text.trim().isEmpty
           ? null
           : pickupController.text.trim(),
@@ -573,10 +582,7 @@ class _DriverRidePostScreenState extends State<DriverRidePostScreen> {
                 child: const MicroLabel("My posted rides"),
               ),
               StreamBuilder<List<Map<String, dynamic>>>(
-                stream: _supabase
-                    .from('posts')
-                    .stream(primaryKey: ['id'])
-                    .eq('driver_id', _currentUserId),
+                stream: RideService.getDriverPosts(_currentUserId),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
