@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/live_query.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/premium_ui.dart';
 
@@ -14,18 +15,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   final _supabase = Supabase.instance.client;
 
   String get _currentUserId => _supabase.auth.currentUser?.id ?? '';
+
   Stream<List<Map<String, dynamic>>> get _stream {
-    if (_currentUserId.isEmpty) {
-      return _supabase
-          .from('notifications')
-          .stream(primaryKey: ['id'])
-          .order('created_at');
-    }
-    return _supabase
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', _currentUserId)
-        .order('created_at');
+    return LiveQuery.watch(
+      table: 'notifications',
+      eq1Column: _currentUserId.isEmpty ? null : 'user_id',
+      eq1Value: _currentUserId.isEmpty ? null : _currentUserId,
+      interval: const Duration(seconds: 6),
+    ).map((rows) {
+      rows.sort((a, b) => (a['created_at'] ?? '')
+          .toString()
+          .compareTo((b['created_at'] ?? '').toString()));
+      return rows;
+    });
   }
 
   Future<void> _markRead(List<Map<String, dynamic>> unread) async {

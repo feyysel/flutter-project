@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'live_query.dart';
 
 class RideService {
   static final SupabaseClient _client = Supabase.instance.client;
@@ -12,6 +13,7 @@ class RideService {
     required String driverName,
     required String vehicleModel,
     required int seats,
+    DateTime? departureAt,
     String? pickupLocation,
     String? dropLocation,
   }) async {
@@ -26,43 +28,62 @@ class RideService {
       'total_seats': seats,
       'available_seats': seats,
       'vehicle_model': vehicleModel,
+      if (departureAt != null) 'departure_at': departureAt.toUtc().toIso8601String(),
       if (pickupLocation != null) 'pickup_location': pickupLocation,
       if (dropLocation != null) 'drop_location': dropLocation,
       'is_online': true,
       'is_full': false,
       'status': 'active',
+      'trip_status': 'scheduled',
     });
   }
 
   static Stream<List<Map<String, dynamic>>> getRides() {
-    return _client
-        .from('posts')
-        .stream(primaryKey: ['id']);
+    return LiveQuery.watch(table: 'posts');
   }
 
   static Stream<List<Map<String, dynamic>>> getRideRequests(String driverId) {
-    return _client
-        .from('ride_requests')
-        .stream(primaryKey: ['id'])
-        .eq('driver_id', driverId);
+    return LiveQuery.watch(
+      table: 'ride_requests',
+      eq1Column: 'driver_id',
+      eq1Value: driverId,
+    );
   }
 
-  static Stream<List<Map<String, dynamic>>> getRideHistory(String userId, {String? field}) {
-    final query = _client
-        .from('ride_history')
-        .stream(primaryKey: ['id']);
+  static Stream<List<Map<String, dynamic>>> getPassengerRequests(
+    String passengerId,
+  ) {
+    return LiveQuery.watch(
+      table: 'ride_requests',
+      eq1Column: 'passenger_id',
+      eq1Value: passengerId,
+    );
+  }
 
-    if (field != null) {
-      return query.eq(field, userId);
-    }
-    return query;
+  static Stream<List<Map<String, dynamic>>> getDriverPosts(String driverId) {
+    return LiveQuery.watch(
+      table: 'posts',
+      eq1Column: 'driver_id',
+      eq1Value: driverId,
+    );
+  }
+
+  static Stream<List<Map<String, dynamic>>> getRideHistory(String userId,
+      {String? field}) {
+    return LiveQuery.watch(
+      table: 'ride_history',
+      eq1Column: field,
+      eq1Value: field != null ? userId : null,
+    );
   }
 
   static Stream<List<Map<String, dynamic>>> getNotifications(String userId) {
-    return _client
-        .from('notifications')
-        .stream(primaryKey: ['id'])
-        .eq('user_id', userId);
+    return LiveQuery.watch(
+      table: 'notifications',
+      eq1Column: 'user_id',
+      eq1Value: userId,
+      interval: const Duration(seconds: 6),
+    );
   }
 
   static Future<void> addNotification({

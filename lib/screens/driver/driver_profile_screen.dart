@@ -10,6 +10,7 @@ import 'driver_history_screen.dart';
 import 'driver_verification_screen.dart';
 import '../../services/auth_service.dart';
 import '../../services/storage_service.dart';
+import '../../services/trip_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/premium_side_menu.dart';
 
@@ -316,6 +317,88 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
     );
   }
 
+  Future<bool?> _editBankDetails() async {
+    final bankController =
+        TextEditingController(text: (driverData?['bank_name'] ?? '').toString());
+    final holderController = TextEditingController(
+        text: (driverData?['bank_account_holder'] ?? '').toString());
+    final accountController = TextEditingController(
+        text: (driverData?['bank_account_number'] ?? '').toString());
+
+    return showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Payout / Bank Details"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: bankController,
+                decoration: const InputDecoration(
+                    labelText: "Bank name (e.g. CBE, Telebirr)"),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: holderController,
+                decoration:
+                    const InputDecoration(labelText: "Account holder name"),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: accountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Account number"),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (bankController.text.trim().isEmpty ||
+                  holderController.text.trim().isEmpty ||
+                  accountController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  const SnackBar(
+                    backgroundColor: Colors.red,
+                    content: Text("Fill all fields"),
+                  ),
+                );
+                return;
+              }
+              try {
+                await TripService.saveBankDetails(
+                  userId: _currentUserId,
+                  bankName: bankController.text,
+                  accountHolder: holderController.text,
+                  accountNumber: accountController.text,
+                );
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext, true);
+                }
+              } catch (e) {
+                if (dialogContext.mounted) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.red,
+                      content: Text("Could not save: $e"),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> logout() async {
     await AuthService.logout();
     if (mounted) {
@@ -603,6 +686,23 @@ class _DriverProfileScreenState extends State<DriverProfileScreen> {
                     settingsTile(
                       icon: Icons.description,
                       title: "Documents & Insurance",
+                    ),
+                    settingsTile(
+                      icon: Icons.account_balance_rounded,
+                      title: "Payout / Bank Details",
+                      onTap: () async {
+                        final saved = await _editBankDetails();
+                        if (saved == true) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: AppColors.success,
+                              content: Text("Payout details updated"),
+                            ),
+                          );
+                          loadDriverData();
+                        }
+                      },
                     ),
                     settingsTile(
                       icon: Icons.history,

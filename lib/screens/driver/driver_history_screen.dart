@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/ride_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/premium_ui.dart';
 
@@ -25,10 +26,7 @@ class DriverHistoryScreen extends StatelessWidget {
       ),
       body: PremiumBackground(
         child: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: supabase
-              .from('ride_history')
-              .stream(primaryKey: ['id'])
-              .eq('driver_id', userId),
+          stream: RideService.getRideHistory(userId, field: 'driver_id'),
           builder: (context, snapshot) {
             if (!snapshot.hasData) {
               return const Center(child: CircularProgressIndicator());
